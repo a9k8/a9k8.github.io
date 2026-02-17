@@ -41,7 +41,7 @@ particlesJS('particles-js',
         }
       },
       "opacity": {
-        "value": 0.3,
+        "value": 0.7,
         "random": false,
         "anim": {
           "enable": false,
@@ -64,7 +64,7 @@ particlesJS('particles-js',
         "enable": true,
         "distance": 150,
         "color": "#4ec9b0",
-        "opacity": 0.2,
+        "opacity": 0.5,
         "width": 1
       },
       "move": {
