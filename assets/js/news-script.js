@@ -17,7 +17,7 @@ async function renderNews() {
                 day: 'numeric'
             });
 
-            const content = parseBold(parseMarkdownLinks(item.content));
+            const content = parseColorHighlights(parseBold(parseMarkdownLinks(item.content)));
 
             return `
                 <div class="news-item">
@@ -33,6 +33,12 @@ async function renderNews() {
     } catch (error) {
         console.error('Error loading news data:', error);
     }
+}
+
+// Parse colorful highlights [[text]]
+function parseColorHighlights(text) {
+    // Convert [[text]] to <span class="colored-highlight">text</span>
+    return text.replace(/\[\[([^\]]+)\]\]/g, '<span class="colored-highlight">$1</span>');
 }
 
 // Simple markdown link parser
@@ -55,7 +61,7 @@ const brightColors = [
 ];
 
 function colorizeLinksInElement(element) {
-    const links = element.querySelectorAll('a');
+    const links = element.querySelectorAll('a, .colored-highlight');
     links.forEach(link => {
         const randomColor = brightColors[Math.floor(Math.random() * brightColors.length)];
         link.style.color = randomColor;
@@ -63,7 +69,7 @@ function colorizeLinksInElement(element) {
 }
 
 function colorizeLinks() {
-    const links = document.querySelectorAll('a');
+    const links = document.querySelectorAll('a, .colored-highlight');
     links.forEach(link => {
         if (!link.style.color || link.style.color === 'rgb(78, 201, 176)') {
             const randomColor = brightColors[Math.floor(Math.random() * brightColors.length)];
