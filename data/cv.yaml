@@ -1,4 +1,4 @@
-- title: "[[General Information]]"
+- title: [[General Information]]
   type: map
   contents:
     - name: Full Name
@@ -10,7 +10,7 @@
     - name: Location
       value: Mumbai, India
 
-- title: "[[Education]]"
+- title: [[Education]]
   type: time_table
   contents:
     - title: PhD Research Scholar
@@ -33,7 +33,7 @@
       description:
         - Bachelor’s Thesis - Deep Learning for Carbon Nanotube Behavior Prediction in Hydrogen Fuel Cells.
 
-- title: "[[Experience]]"
+- title: [[Experience]]
   type: time_table
   contents:
     - title: Deep Learning Researcher
