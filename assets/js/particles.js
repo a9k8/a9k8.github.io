@@ -931,8 +931,8 @@ var pJS = function (tag_id, params) {
 
       var normVec = { x: dx_mouse / dist_mouse, y: dy_mouse / dist_mouse },
         repulseRadius = pJS.interactivity.modes.repulse.distance,
-        velocity = 40,
-        repulseFactor = clamp((1 / repulseRadius) * (-1 * Math.pow(dist_mouse / repulseRadius, 2) + 1) * repulseRadius * velocity, 0, 20);
+        velocity = 15,
+        repulseFactor = clamp((1 / repulseRadius) * (-1 * Math.pow(dist_mouse / repulseRadius, 2) + 1) * repulseRadius * velocity, 0, 8);
 
       var pos = {
         x: p.x + normVec.x * repulseFactor,
