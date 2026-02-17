@@ -27,7 +27,7 @@ body {
     color: #d4d4d4;
     background-color: transparent !important;
     min-height: 100vh;
-    animation: fadeIn 1.2s ease-in-out;
+    animation: fadeIn 2.5s ease-in-out;
 }
 
 /* Page Transition Animations */
@@ -42,7 +42,7 @@ body {
 }
 
 .container {
-    animation: slideIn 1.4s ease-out;
+    animation: slideIn 2.8s ease-out;
 }
 
 @keyframes slideIn {
