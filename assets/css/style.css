@@ -13,18 +13,20 @@
     top: 0;
     left: 0;
     z-index: -1;
-    background-color: #1e1e1e;
+    background-color: #1e1e1e !important;
 }
 
 html {
-    background-color: #1e1e1e;
+    background-color: #1e1e1e !important;
+    min-height: 100%;
 }
 
 body {
     font-family: 'Monaco', 'Menlo', 'Courier New', 'Consolas', monospace;
     line-height: 1.6;
     color: #d4d4d4;
-    background-color: transparent;
+    background-color: transparent !important;
+    min-height: 100vh;
 }
 
 /* Navigation */
