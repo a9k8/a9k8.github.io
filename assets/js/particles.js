@@ -923,7 +923,7 @@ var pJS = function (tag_id, params) {
 
   pJS.fn.modes.repulseParticle = function (p) {
 
-    if (pJS.interactivity.events.onhover.enable && isInArray('repulse', pJS.interactivity.events.onhover.mode) && pJS.interactivity.status != 'mouseleave') {
+    if (pJS.interactivity.events.onhover.enable && isInArray('repulse', pJS.interactivity.events.onhover.mode) && pJS.interactivity.status != 'mouseleave' && pJS.interactivity.mouse.pos_x != null) {
 
       var dx_mouse = p.x - pJS.interactivity.mouse.pos_x,
         dy_mouse = p.y - pJS.interactivity.mouse.pos_y,
@@ -932,12 +932,20 @@ var pJS = function (tag_id, params) {
       var normVec = { x: dx_mouse / dist_mouse, y: dy_mouse / dist_mouse },
         repulseRadius = pJS.interactivity.modes.repulse.distance,
         velocity = 100,
-        // Kinetic approach: multiply factor by a constant for velocity-based push
-        force = clamp((1 / repulseRadius) * (-1 * Math.pow(dist_mouse / repulseRadius, 2) + 1) * repulseRadius * velocity / 50, 0, 50);
+        repulseFactor = clamp((1 / repulseRadius) * (-1 * Math.pow(dist_mouse / repulseRadius, 2) + 1) * repulseRadius * velocity, 0, 50);
 
-      // Kinetic Repulsion: Modify velocity instead of position
-      p.vx = p.vx_i + normVec.x * force;
-      p.vy = p.vy_i + normVec.y * force;
+      var pos = {
+        x: p.x + normVec.x * repulseFactor,
+        y: p.y + normVec.y * repulseFactor
+      }
+
+      if (pJS.particles.move.out_mode == 'bounce') {
+        if (pos.x - p.radius > 0 && pos.x + p.radius < pJS.canvas.w) p.x = pos.x;
+        if (pos.y - p.radius > 0 && pos.y + p.radius < pJS.canvas.h) p.y = pos.y;
+      } else {
+        p.x = pos.x;
+        p.y = pos.y;
+      }
 
     }
 
@@ -993,12 +1001,6 @@ var pJS = function (tag_id, params) {
 
       }
 
-    }
-
-    else {
-      // Restore base velocity when no interaction is happening
-      p.vx = p.vx_i;
-      p.vy = p.vy_i;
     }
 
   };
