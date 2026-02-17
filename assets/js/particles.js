@@ -923,7 +923,7 @@ var pJS = function (tag_id, params) {
 
   pJS.fn.modes.repulseParticle = function (p) {
 
-    if (pJS.interactivity.events.onhover.enable && isInArray('repulse', pJS.interactivity.events.onhover.mode) && pJS.interactivity.status != 'mouseleave') {
+    if (pJS.interactivity.events.onhover.enable && isInArray('repulse', pJS.interactivity.events.onhover.mode) && pJS.interactivity.status == 'mousemove') {
 
       var dx_mouse = p.x - pJS.interactivity.mouse.pos_x,
         dy_mouse = p.y - pJS.interactivity.mouse.pos_y,
@@ -932,7 +932,7 @@ var pJS = function (tag_id, params) {
       var normVec = { x: dx_mouse / dist_mouse, y: dy_mouse / dist_mouse },
         repulseRadius = pJS.interactivity.modes.repulse.distance,
         velocity = 100,
-        repulseFactor = clamp((1 / repulseRadius) * (-1 * Math.pow(dist_mouse / repulseRadius, 2) + 1) * repulseRadius * velocity, 0, 100);
+        repulseFactor = clamp((1 / repulseRadius) * (-1 * Math.pow(dist_mouse / repulseRadius, 2) + 1) * repulseRadius * velocity, 0, 50);
 
       var pos = {
         x: p.x + normVec.x * repulseFactor,
