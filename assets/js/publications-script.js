@@ -1,3 +1,9 @@
+// Parse colorful highlights [[text]]
+function parseColorHighlights(text) {
+    // Convert [[text]] to <span class="colored-highlight">text</span>
+    return text.replace(/\[\[([^\]]+)\]\]/g, '<span class="colored-highlight">$1</span>');
+}
+
 // Simple markdown link parser
 function parseMarkdownLinks(text) {
     // Convert [text](url) to <a href="url">text</a>
@@ -83,7 +89,7 @@ async function renderPublications() {
                         <div class="publication-authors">${authors}</div>
                         <div class="publication-meta">${meta.join(' • ')}</div>
                         ${links.length > 0 ? `<div class="publication-links">${links.join('')}</div>` : ''}
-                        ${paper.additional_info ? `<div class="publication-additional">${parseHighlights(parseMarkdownLinks(paper.additional_info))}</div>` : ''}
+                        ${paper.additional_info ? `<div class="publication-additional">${parseColorHighlights(parseHighlights(parseMarkdownLinks(paper.additional_info)))}</div>` : ''}
                     </div>
                 </div>
             `;
@@ -115,7 +121,7 @@ const brightColors = [
 
 // Colorize links in a specific element (for immediate coloring after rendering)
 function colorizeLinksInElement(element) {
-    const links = element.querySelectorAll('a');
+    const links = element.querySelectorAll('a, .colored-highlight');
     links.forEach(link => {
         const randomColor = brightColors[Math.floor(Math.random() * brightColors.length)];
         link.style.color = randomColor;
@@ -124,7 +130,7 @@ function colorizeLinksInElement(element) {
 
 // Randomly assign colors to all links (fallback for any links that might be missed)
 function colorizeLinks() {
-    const links = document.querySelectorAll('a');
+    const links = document.querySelectorAll('a, .colored-highlight');
     links.forEach(link => {
         // Only colorize if not already colored
         if (!link.style.color || link.style.color === 'rgb(78, 201, 176)') {
