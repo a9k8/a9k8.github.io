@@ -3,18 +3,10 @@ function parseMarkdownLinks(text) {
     return text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
 }
 
-// Parse colored highlights [[text]] - double brackets for colored text
-function parseColoredText(text) {
-    const brightColors = [
-        '#4ec9b0', '#ff6b9d', '#ffd93d', '#6bcf7f', '#ff8c42',
-        '#9b59b6', '#3498db', '#e74c3c', '#1abc9c', '#f39c12',
-        '#e91e63', '#00bcd4',
-    ];
-
-    return text.replace(/\[\[(.+?)\]\]/g, (match, content) => {
-        const randomColor = brightColors[Math.floor(Math.random() * brightColors.length)];
-        return `<span style="color: ${randomColor}; font-weight: 500;">${content}</span>`;
-    });
+// Parse colorful highlights [[text]]
+function parseColorHighlights(text) {
+    // Convert [[text]] to <span class="colored-highlight">text</span>
+    return text.replace(/\[\[([^\]]+)\]\]/g, '<span class="colored-highlight">$1</span>');
 }
 
 // Parse bold markdown **text**
@@ -30,7 +22,7 @@ function formatText(text) {
     // Convert to string in case it's not already
     text = String(text);
     text = parseMarkdownLinks(text);
-    text = parseColoredText(text);
+    text = parseColorHighlights(text);
     text = parseBold(text);
     return text;
 }
@@ -97,7 +89,7 @@ const brightColors = [
 
 // Randomly assign colors to all links
 function colorizeLinks() {
-    const links = document.querySelectorAll('a');
+    const links = document.querySelectorAll('a, .colored-highlight');
     links.forEach(link => {
         const randomColor = brightColors[Math.floor(Math.random() * brightColors.length)];
         link.style.color = randomColor;
