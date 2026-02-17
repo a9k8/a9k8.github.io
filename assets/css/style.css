@@ -16,6 +16,10 @@
     background-color: #1e1e1e;
 }
 
+html {
+    background-color: #1e1e1e;
+}
+
 body {
     font-family: 'Monaco', 'Menlo', 'Courier New', 'Consolas', monospace;
     line-height: 1.6;
