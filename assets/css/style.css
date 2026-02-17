@@ -374,6 +374,10 @@ body {
     font-style: normal;
 }
 
+.colored-highlight {
+    font-weight: 500;
+}
+
 /* CV Section */
 .cv-section {
     margin-bottom: 3rem;
