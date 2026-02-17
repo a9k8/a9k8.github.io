@@ -1,3 +1,9 @@
+// Parse colorful highlights [[text]]
+function parseColorHighlights(text) {
+    // Convert [[text]] to <span class="colored-highlight">text</span>
+    return text.replace(/\[\[([^\]]+)\]\]/g, '<span class="colored-highlight">$1</span>');
+}
+
 // Simple markdown link parser
 function parseMarkdownLinks(text) {
     // Convert [text](url) to <a href="url">text</a>
@@ -61,7 +67,7 @@ async function renderAbout() {
                     html += '<ul>';
                     inList = true;
                 }
-                html += `<li>${parseBold(parseMarkdownLinks(line.trim().substring(2)))}</li>`;
+                html += `<li>${parseColorHighlights(parseBold(parseMarkdownLinks(line.trim().substring(2))))}</li>`;
             } else if (line.trim() === '') {
                 // Empty line - close list if open, add paragraph break
                 if (inList) {
@@ -75,7 +81,7 @@ async function renderAbout() {
                     html += '</ul>';
                     inList = false;
                 }
-                html += `<p>${parseBold(parseMarkdownLinks(line.trim()))}</p>`;
+                html += `<p>${parseColorHighlights(parseBold(parseMarkdownLinks(line.trim())))}</p>`;
             }
         }
 
@@ -100,7 +106,7 @@ async function renderNews() {
         const container = document.getElementById('news-container');
 
         const newsItems = news.map(item => {
-            const content = parseBold(parseMarkdownLinks(item.content));
+            const content = parseColorHighlights(parseBold(parseMarkdownLinks(item.content)));
             return `<li>${content}</li>`;
         }).join('');
 
@@ -195,7 +201,7 @@ const brightColors = [
 
 // Colorize links in a specific element (for immediate coloring after rendering)
 function colorizeLinksInElement(element) {
-    const links = element.querySelectorAll('a');
+    const links = element.querySelectorAll('a, .colored-highlight');
     links.forEach(link => {
         const randomColor = brightColors[Math.floor(Math.random() * brightColors.length)];
         link.style.color = randomColor;
@@ -204,7 +210,7 @@ function colorizeLinksInElement(element) {
 
 // Randomly assign colors to all links (fallback for any links that might be missed)
 function colorizeLinks() {
-    const links = document.querySelectorAll('a');
+    const links = document.querySelectorAll('a, .colored-highlight');
     links.forEach(link => {
         // Only colorize if not already colored
         if (!link.style.color || link.style.color === 'rgb(78, 201, 176)') {
