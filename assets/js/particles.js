@@ -923,7 +923,7 @@ var pJS = function(tag_id, params){
 
   pJS.fn.modes.repulseParticle = function(p){
 
-    if(pJS.interactivity.events.onhover.enable && isInArray('repulse', pJS.interactivity.events.onhover.mode) && pJS.interactivity.status == 'mousemove') {
+    if(pJS.interactivity.events.onhover.enable && isInArray('repulse', pJS.interactivity.events.onhover.mode) && pJS.interactivity.status != 'mousemove') {
 
       var dx_mouse = p.x - pJS.interactivity.mouse.pos_x,
           dy_mouse = p.y - pJS.interactivity.mouse.pos_y,
