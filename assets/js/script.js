@@ -18,7 +18,7 @@ async function renderAbout() {
                     html += '<ul>';
                     inList = true;
                 }
-                html += `<li>${parseBold(parseMarkdownLinks(line.trim().substring(2)))}</li>`;
+                html += `<li>${formatText(line.trim().substring(2))}</li>`;
             } else if (line.trim() === '') {
                 if (inList) {
                     html += '</ul>';
@@ -29,7 +29,7 @@ async function renderAbout() {
                     html += '</ul>';
                     inList = false;
                 }
-                html += `<p>${parseBold(parseMarkdownLinks(line.trim()))}</p>`;
+                html += `<p>${formatText(line.trim())}</p>`;
             }
         }
 
