@@ -52,6 +52,15 @@ function parseColoredText(text) {
     });
 }
 
+// Apply all text formatting (Links, Bold, Colored Text)
+function formatText(text) {
+    if (!text) return '';
+    text = parseMarkdownLinks(text);
+    text = parseBold(text);
+    text = parseColoredText(text);
+    return text;
+}
+
 // Format date for display
 function formatDate(dateString) {
     if (!dateString) return '';
