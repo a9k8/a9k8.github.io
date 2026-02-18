@@ -11,7 +11,7 @@ async function renderNews() {
 
         const newsItems = news.map(item => {
             const formattedDate = formatDate(item.date);
-            const content = parseBold(parseMarkdownLinks(item.content));
+            const content = formatText(item.content);
 
             return `
                 <div class="news-item">
