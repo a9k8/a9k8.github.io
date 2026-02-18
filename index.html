@@ -15,15 +15,16 @@
 
     <nav class="navbar">
         <div class="nav-container">
-            <a href="index.html" class="nav-link">Home</a>
-            <a href="news.html" class="nav-link">News</a>
-            <a href="publications.html" class="nav-link">Publications</a>
-            <a href="cv.html" class="nav-link">CV</a>
+            <a href="#about" class="nav-link">Home</a>
+            <a href="#news" class="nav-link">News</a>
+            <a href="#publications" class="nav-link">Publications</a>
+            <a href="#cv" class="nav-link">CV</a>
         </div>
     </nav>
 
     <main class="container">
-        <section id="about" class="section">
+        <!-- About Section -->
+        <section id="about" class="section spa-section">
             <div class="about-header">
                 <img src="assets/img/background.png" alt="Background" class="wall-image">
                 <div class="profile-img-container">
@@ -34,13 +35,51 @@
                 <div class="about-text" id="about-text"></div>
             </div>
         </section>
+
+        <!-- News Section -->
+        <section id="news" class="section spa-section hidden">
+            <h1>News</h1>
+            <div id="news-container"></div>
+        </section>
+
+        <!-- Publications Section -->
+        <section id="publications" class="section spa-section hidden">
+            <h1>Publications</h1>
+            <div id="publications-container"></div>
+        </section>
+
+        <!-- CV Section -->
+        <section id="cv" class="section spa-section hidden">
+            <h1>Curriculum Vitae</h1>
+            <div id="cv-container"></div>
+        </section>
     </main>
 
+    <!-- Footer will be added via common.js if we restore it, or manually here -->
+    <footer class="footer">
+        <div class="footer-container">
+            <p>&copy; <span id="current-year"></span> Aniket Junghare. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="mailto:aniketjunghare.iitb@gmail.com">Email</a>
+                <a href="https://www.linkedin.com/in/junghare-aniket/" target="_blank">LinkedIn</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="assets/js/common.js"></script>
     <script src="assets/js/script.js"></script>
+    <script src="assets/js/news-script.js"></script>
+    <script src="assets/js/publications-script.js"></script>
+    <script src="assets/js/cv-script.js"></script>
+    <script src="assets/js/spa.js"></script>
 
     <!-- Particles.js Animation -->
     <script src="assets/js/particles.js"></script>
     <script src="assets/js/particles-config.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
 </body>
 
 </html>
