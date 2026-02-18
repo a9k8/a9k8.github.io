@@ -44,7 +44,7 @@ async function renderPublications() {
                         <div class="publication-authors">${authors}</div>
                         <div class="publication-meta">${meta.join(' • ')}</div>
                         ${links.length > 0 ? `<div class="publication-links">${links.join('')}</div>` : ''}
-                        ${paper.additional_info ? `<div class="publication-additional">${parseHighlights(parseMarkdownLinks(paper.additional_info))}</div>` : ''}
+                        ${paper.additional_info ? `<div class="publication-additional">${parseHighlights(formatText(paper.additional_info))}</div>` : ''}
                     </div>
                 </div>
             `;
