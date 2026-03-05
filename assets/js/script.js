@@ -56,8 +56,7 @@ async function renderAboutGeneralInfo() {
 
         const iconMap = {
             'email': 'fa-solid fa-envelope',
-            'linkedin': 'fa-brands fa-linkedin',
-            'location': 'fa-solid fa-location-dot'
+            'linkedin': 'fa-brands fa-linkedin'
         };
 
         container.innerHTML = generalSection.contents.map(item => {
