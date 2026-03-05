@@ -66,7 +66,7 @@ async function renderAboutGeneralInfo() {
             if (!icon) return '';
 
             if (key === 'email') {
-                return `<div class="info-item"><i class="${icon}"></i><a href="mailto:${item.value}">${item.value}</a></div>`;
+                return `<div class="info-item"><a href="mailto:${item.value}" class="social-icon" title="${item.value}"><i class="${icon}"></i></a></div>`;
             } else if (key === 'linkedin') {
                 return `<div class="info-item"><a href="${item.value}" target="_blank" rel="noopener noreferrer" class="social-icon" title="LinkedIn Profile"><i class="${icon}"></i></a></div>`;
             } else {
