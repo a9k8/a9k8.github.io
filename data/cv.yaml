@@ -1,8 +1,6 @@
 - title: "[[General Information]]"
   type: map
   contents:
-    - name: Full Name
-      value: Aniket Junghare
     - name: Email
       value: aniketjunghare.iitb@gmail.com
     - name: LinkedIn
@@ -20,7 +18,7 @@
         - Self-Supervised Learning for Visual Representation Learning and Multimodal Understanding.
         - Research focuses on remote sensing foundation models, self-supervised learning, and multimodal representation learning.
 
-    - title: Master of Technology (Machine Learning)
+    - title: Master of Technology
       institution: Indian Institute of Technology Bombay
       year: "Jun 2023 – Oct 2024"
       description:
@@ -52,9 +50,7 @@
     - title: Technical Secretary
       institution: Centre of Studies in Resources Engineering, IIT Bombay
       year: "Jun 2024 – May 2025"
-      description:
-        - Organized technical workshops, hackathons, and academic events.
-        - Coordinated with faculty and industry professionals for invited talks.
+      
 
     - title: Machine Learning Engineer
       institution: Smart Controls India Ltd
