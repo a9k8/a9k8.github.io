@@ -14,7 +14,6 @@ async function renderCV() {
                 const isGeneralInfo = section.title && section.title.toLowerCase().includes('general information');
                 if (isGeneralInfo) {
                     const iconMap = {
-                        'full name': 'fa-solid fa-user',
                         'email': 'fa-solid fa-envelope',
                         'linkedin': 'fa-brands fa-linkedin',
                         'location': 'fa-solid fa-location-dot'
