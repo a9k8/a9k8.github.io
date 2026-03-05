@@ -11,12 +11,38 @@ async function renderCV() {
                 <h2 class="cv-section-title">${formatText(section.title)}</h2>`;
 
             if (section.type === 'map') {
-                html += section.contents.map(item => `
+                const isGeneralInfo = section.title && section.title.toLowerCase().includes('general information');
+                if (isGeneralInfo) {
+                    const iconMap = {
+                        'full name': 'fa-solid fa-user',
+                        'email': 'fa-solid fa-envelope',
+                        'linkedin': 'fa-brands fa-linkedin',
+                        'location': 'fa-solid fa-location-dot'
+                    };
+                    html += `<div class="general-info-container">`;
+                    html += section.contents.map(item => {
+                        const key = item.name.toLowerCase();
+                        const icon = iconMap[key] || 'fa-solid fa-circle-info';
+                        let valueHtml;
+                        if (key === 'email') {
+                            valueHtml = `<a href="mailto:${item.value}">${item.value}</a>`;
+                        } else if (key === 'linkedin') {
+                            valueHtml = `<a href="${item.value}" target="_blank" rel="noopener noreferrer" class="social-icon" title="LinkedIn Profile"><i class="${icon}"></i></a>`;
+                            return `<div class="info-item">${valueHtml}</div>`;
+                        } else {
+                            valueHtml = `<span>${item.value}</span>`;
+                        }
+                        return `<div class="info-item"><i class="${icon}"></i>${valueHtml}</div>`;
+                    }).join('');
+                    html += `</div>`;
+                } else {
+                    html += section.contents.map(item => `
                     <div class="cv-map">
                         <div class="cv-map-name">${item.name}:</div>
                         <div class="cv-map-value">${formatText(item.value)}</div>
                     </div>
                 `).join('');
+                }
             } else if (section.type === 'time_table') {
                 html += section.contents.map(item => {
                     let itemHtml = `
@@ -49,40 +75,6 @@ async function renderCV() {
     }
 }
 
-// Render General Info (contact details with icons) in CV section
-async function renderGeneralInfo() {
-    try {
-        const config = await loadConfig();
-        if (!config) return;
-
-        const container = document.getElementById('general-info');
-        if (!container) return;
-
-        container.innerHTML = `
-            <div class="info-item">
-                <i class="fa-solid fa-user"></i>
-                <span>${config.name || 'Aniket Junghare'}</span>
-            </div>
-            <div class="info-item">
-                <i class="fa-solid fa-envelope"></i>
-                <a href="mailto:${config.email}">${config.email}</a>
-            </div>
-            <div class="info-item">
-                <a href="${config.linkedin}" target="_blank" rel="noopener noreferrer" class="social-icon" title="LinkedIn Profile">
-                    <i class="fa-brands fa-linkedin"></i>
-                </a>
-            </div>
-            <div class="info-item">
-                <i class="fa-solid fa-location-dot"></i>
-                <span>${config.location || 'Mumbai, India'}</span>
-            </div>
-        `;
-    } catch (error) {
-        console.error('Error loading general info:', error);
-    }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     renderCV();
-    renderGeneralInfo();
 });
