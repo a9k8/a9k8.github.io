@@ -42,7 +42,41 @@ async function renderAbout() {
     }
 }
 
+// Render General Info
+async function renderGeneralInfo() {
+    try {
+        const config = await loadConfig();
+        if (!config) return;
+
+        const container = document.getElementById('general-info');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="info-item">
+                <i class="fa-solid fa-user"></i>
+                <span>${config.name || 'Aniket Junghare'}</span>
+            </div>
+            <div class="info-item">
+                <i class="fa-solid fa-envelope"></i>
+                <a href="mailto:${config.email}">${config.email}</a>
+            </div>
+            <div class="info-item">
+                <a href="${config.linkedin}" target="_blank" rel="noopener noreferrer" class="social-icon" title="LinkedIn Profile">
+                    <i class="fa-brands fa-linkedin"></i>
+                </a>
+            </div>
+            <div class="info-item">
+                <i class="fa-solid fa-location-dot"></i>
+                <span>${config.location || 'Mumbai, India'}</span>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error loading general info:', error);
+    }
+}
+
 // Global initialization call
 document.addEventListener('DOMContentLoaded', () => {
     renderAbout();
+    renderGeneralInfo();
 });
