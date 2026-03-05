@@ -79,7 +79,8 @@ async function renderGeneralInfo() {
             } else if (key === 'linkedin') {
                 return `<div class="info-item"><a href="${item.value}" target="_blank" rel="noopener noreferrer" class="social-icon" title="LinkedIn Profile"><i class="${icon}"></i></a></div>`;
             } else {
-                return `<div class="info-item"><i class="${icon}"></i><span>${item.value}</span></div>`;
+                const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.value)}`;
+                return `<div class="info-item"><i class="${icon}"></i><a href="${mapsUrl}" target="_blank" rel="noopener noreferrer">${item.value}</a></div>`;
             }
         }).join('');
     } catch (error) {
