@@ -172,6 +172,7 @@ body {
 /* Sections */
 .section {
     margin-bottom: 4rem;
+    pointer-events: none;
 }
 
 .section h2 {
@@ -187,6 +188,24 @@ body {
     color: #ffffff;
     font-weight: 600;
     text-align: center;
+}
+
+/* Allow interaction with inner elements */
+.section a,
+.section button,
+.section .profile-img-container,
+.section .general-info-container,
+.section .about-text,
+.section .news-container,
+.section .publications-container,
+.section .cv-container,
+.section p,
+.section h1,
+.section h2,
+.section li,
+.section span,
+.section i {
+    pointer-events: auto;
 }
 
 /* SPA Hidden helper */
