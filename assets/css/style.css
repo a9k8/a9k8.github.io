@@ -51,7 +51,7 @@
     min-height: 100vh;
     position: relative;
     z-index: 0;
-    background: #000 url(http://www.script-tutorials.com/demos/360/images/stars.png) repeat top center;
+    background: #000 url(../img/stars_bg.png) repeat top center;
 }
 
 #ripple-bg::after {
@@ -62,7 +62,7 @@
     width: 100%;
     height: 100%;
     z-index: -1;
-    background: transparent url(http://www.script-tutorials.com/demos/360/images/twinkling.png) repeat top center;
+    background: transparent url(../img/twinkling_bg.png) repeat top center;
     -moz-animation: move-twink-back 200s linear infinite;
     -ms-animation: move-twink-back 200s linear infinite;
     -o-animation: move-twink-back 200s linear infinite;
