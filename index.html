@@ -11,54 +11,52 @@
 </head>
 
 <body>
-    <!-- Ripple Background Animation Wrapper -->
-    <div id="ripple-bg" class="body">
+    <!-- Ripple Background Animation -->
+    <div id="ripple-bg" class="body"></div>
 
-        <nav class="navbar">
-            <div class="nav-container">
-                <a href="javascript:void(0)" class="nav-link active" data-section="about">Home</a>
-                <a href="javascript:void(0)" class="nav-link" data-section="news">News</a>
-                <a href="javascript:void(0)" class="nav-link" data-section="publications">Publications</a>
-                <a href="javascript:void(0)" class="nav-link" data-section="cv">CV</a>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="javascript:void(0)" class="nav-link active" data-section="about">Home</a>
+            <a href="javascript:void(0)" class="nav-link" data-section="news">News</a>
+            <a href="javascript:void(0)" class="nav-link" data-section="publications">Publications</a>
+            <a href="javascript:void(0)" class="nav-link" data-section="cv">CV</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- About Section -->
+        <section id="about" class="section spa-section">
+            <div class="about-header">
+                <img src="assets/img/background.png" alt="Background" class="wall-image">
+                <div class="profile-img-container">
+                    <img src="assets/img/aniket.jpeg" alt="Aniket Junghare" class="profile-img" id="profile-img">
+                </div>
+                <div class="general-info-container" id="about-general-info"></div>
             </div>
-        </nav>
+            <div class="about-content">
+                <div class="about-text" id="about-text"></div>
+            </div>
+        </section>
 
-        <main class="container">
-            <!-- About Section -->
-            <section id="about" class="section spa-section">
-                <div class="about-header">
-                    <img src="assets/img/background.png" alt="Background" class="wall-image">
-                    <div class="profile-img-container">
-                        <img src="assets/img/aniket.jpeg" alt="Aniket Junghare" class="profile-img" id="profile-img">
-                    </div>
-                    <div class="general-info-container" id="about-general-info"></div>
-                </div>
-                <div class="about-content">
-                    <div class="about-text" id="about-text"></div>
-                </div>
-            </section>
+        <!-- News Section -->
+        <section id="news" class="section spa-section hidden">
+            <h1>News</h1>
+            <div id="news-container"></div>
+        </section>
 
-            <!-- News Section -->
-            <section id="news" class="section spa-section hidden">
-                <h1>News</h1>
-                <div id="news-container"></div>
-            </section>
+        <!-- Publications Section -->
+        <section id="publications" class="section spa-section hidden">
+            <h1>Publications</h1>
+            <div id="publications-container"></div>
+        </section>
 
-            <!-- Publications Section -->
-            <section id="publications" class="section spa-section hidden">
-                <h1>Publications</h1>
-                <div id="publications-container"></div>
-            </section>
-
-            <!-- CV Section -->
-            <section id="cv" class="section spa-section hidden">
-                <h1>Aniket Junghare</h1>
-                <div class="general-info-container" id="general-info"></div>
-                <div id="cv-container"></div>
-            </section>
-        </main>
-
-    </div> <!-- End of ripple-bg wrapper -->
+        <!-- CV Section -->
+        <section id="cv" class="section spa-section hidden">
+            <h1>Aniket Junghare</h1>
+            <div class="general-info-container" id="general-info"></div>
+            <div id="cv-container"></div>
+        </section>
+    </main>
 
     <!-- Scripts -->
     <script src="assets/js/common.js"></script>
