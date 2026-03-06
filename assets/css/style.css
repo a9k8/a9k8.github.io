@@ -49,7 +49,11 @@
 #ripple-bg {
     width: 100%;
     min-height: 100vh;
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0;
     z-index: 0;
     background: #000 url(../img/stars_bg.png) repeat top center;
 }
