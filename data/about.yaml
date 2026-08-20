@@ -1,0 +1,4 @@
+content: |
+  I am Aniket Junghare, a PhD Scholar at [Indian Institute of Technology Bombay](https://www.iitb.ac.in), supervised by [Dr. Biplab Banerjee](https://biplab-banerjee.github.io). My research focuses on developing foundation models for Earth observation through self-supervised and multimodal representation learning on large-scale satellite imagery.
+  
+  I work at the intersection of deep learning, computer vision, and remote sensing, designing pretraining frameworks — including masked reconstruction and [[latent prediction (JEPA)]] paradigms — that capture spectral, spatial, and semantic information across heterogeneous sensing modalities such as SAR, optical, and hyperspectral imagery. My goal is to build scalable, generalizable geospatial foundation models that reduce reliance on labeled annotations for Earth observation tasks.
