@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aniket Junghare </title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="javascript:void(0)" class="nav-link active" data-section="about">Home</a>
+            <a href="javascript:void(0)" class="nav-link" data-section="news">News</a>
+            <a href="javascript:void(0)" class="nav-link" data-section="publications">Publications</a>
+            <a href="javascript:void(0)" class="nav-link" data-section="cv">CV</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- About Section -->
+        <section id="about" class="section spa-section">
+            <div class="about-header">
+                <img src="assets/img/background.png" alt="Background" class="wall-image">
+                <div class="profile-img-container">
+                    <img src="assets/img/aniket.jpeg" alt="Aniket Junghare" class="profile-img" id="profile-img">
+                </div>
+                <div class="general-info-container" id="about-general-info"></div>
+            </div>
+            <div class="about-content">
+                <div class="about-text" id="about-text"></div>
+            </div>
+        </section>
+
+        <!-- News Section -->
+        <section id="news" class="section spa-section hidden">
+            <h1>News</h1>
+            <div id="news-container"></div>
+        </section>
+
+        <!-- Publications Section -->
+        <section id="publications" class="section spa-section hidden">
+            <h1>Publications</h1>
+            <div id="publications-container"></div>
+        </section>
+
+        <!-- CV Section -->
+        <section id="cv" class="section spa-section hidden">
+            <h1>Aniket Junghare</h1>
+            <div class="general-info-container" id="general-info"></div>
+            <div id="cv-container"></div>
+        </section>
+    </main>
+
+    <!-- Scripts -->
+    <script src="assets/js/common.js"></script>
+    <script src="assets/js/script.js"></script>
+    <script src="assets/js/news-script.js"></script>
+    <script src="assets/js/publications-script.js"></script>
+    <script src="assets/js/cv-script.js"></script>
+    <script src="assets/js/spa.js"></script>
+
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+
+</html>
