@@ -1,0 +1,520 @@
+{
+  "person": {
+    "name": "Qinfeng Zhu",
+    "nameZh": "朱钦峰",
+    "email": "zhuqinfeng1999@gmail.com",
+    "institutionalEmail": "qinfeng.zhu21@student.xjtlu.edu.cn",
+    "role": "Ph.D. Researcher",
+    "location": "Suzhou, China",
+    "affiliations": [
+      "Xi'an Jiaotong-Liverpool University",
+      "University of Liverpool"
+    ]
+  },
+  "domains": [
+    {
+      "id": "remote-sensing",
+      "number": "01",
+      "title": "Remote Sensing",
+      "kicker": "Earth observation",
+      "description": "Learning rich representations from aerial, satellite and multispectral observations.",
+      "image": "/assets/images/research-remote-sensing.webp",
+      "position": { "x": 18, "y": 25 },
+      "publicationIds": ["swinmamba", "classwise-crf", "rethinking-mamba", "samba", "alphaearth"]
+    },
+    {
+      "id": "3d-vision",
+      "number": "02",
+      "title": "3D Computer Vision",
+      "kicker": "Spatial intelligence",
+      "description": "Point-cloud learning and fine-grained urban scene understanding.",
+      "image": "/assets/images/research-3d-vision.webp",
+      "position": { "x": 79, "y": 23 },
+      "publicationIds": ["semanticurban", "point-cloud-augmentation", "point-cloud-colorization"]
+    },
+    {
+      "id": "panoramic-vision",
+      "number": "03",
+      "title": "Panoramic Vision",
+      "kicker": "Sphere-native perception",
+      "description": "Geometry-aware representation learning for distortion-robust, rotation-consistent 360° scene understanding.",
+      "image": "/assets/images/research-panoramic-vision.webp",
+      "position": { "x": 51, "y": 10 },
+      "publicationIds": ["panoramic-survey", "so3uformer"]
+    },
+    {
+      "id": "multimodal-fusion",
+      "number": "04",
+      "title": "Multimodal Fusion",
+      "kicker": "Sensor synergy",
+      "description": "Combining complementary sensors to build more robust perception systems.",
+      "image": "/assets/images/research-multimodal.webp",
+      "position": { "x": 17, "y": 73 },
+      "publicationIds": ["indoorms", "wastems", "mscrackmamba"]
+    },
+    {
+      "id": "semantic-segmentation",
+      "number": "05",
+      "title": "Semantic Segmentation",
+      "kicker": "Dense prediction",
+      "description": "Pixel-level and point-level reasoning for indoor, urban and environmental scenes.",
+      "image": "/assets/images/research-semantic-segmentation.webp",
+      "position": { "x": 50, "y": 51 },
+      "publicationIds": ["classwise-crf", "swinmamba", "rethinking-mamba", "indoorms", "samba", "seg-lstm"]
+    },
+    {
+      "id": "data-augmentation",
+      "number": "06",
+      "title": "Data Augmentation",
+      "kicker": "Robust learning",
+      "description": "Strategies that improve generalization across scarce and imbalanced data.",
+      "image": "/assets/images/research-data-augmentation.webp",
+      "position": { "x": 80, "y": 72 },
+      "publicationIds": ["point-cloud-augmentation", "generalised-pretraining"]
+    },
+    {
+      "id": "deep-learning",
+      "number": "07",
+      "title": "Deep Learning",
+      "kicker": "Neural systems",
+      "description": "Modern architectures for reliable and explainable visual intelligence.",
+      "image": "/assets/images/research-deep-learning.webp",
+      "position": { "x": 51, "y": 88 },
+      "publicationIds": ["so3uformer", "swinmamba", "samba", "seg-lstm"]
+    }
+  ],
+  "publications": [
+    {
+      "id": "semanticurban",
+      "year": 2026,
+      "venue": "Expert Systems with Applications",
+      "venueShort": "ESWA",
+      "type": "Journal",
+      "title": "Towards accurate urban scene understanding using point clouds: The SemanticUrban dataset",
+      "authors": [
+        { "name": "Yuan Fang", "coFirst": true },
+        { "name": "Qinfeng Zhu", "self": true, "coFirst": true },
+        { "name": "Yuanzhi Cai" },
+        { "name": "Lei Fan" }
+      ],
+      "note": "Co-first author",
+      "featuredRank": 1,
+      "image": "/static/images/SemanticUrban1.jpg",
+      "imageAlt": "SemanticUrban point-cloud intensity, RGB and semantic labels",
+      "summary": "A large-scale, high-resolution terrestrial laser-scanning benchmark for fine-grained semantic understanding of complex urban scenes.",
+      "keywords": ["Point cloud", "Dataset", "Urban scenes", "Semantic segmentation"],
+      "links": {
+        "Journal": "https://www.sciencedirect.com/science/article/pii/S0957417426018610",
+        "Project": "/SemanticUrban/",
+        "GitHub": "https://github.com/YuanFangFF/SemanticUrban",
+        "DOI": "https://doi.org/10.1016/j.eswa.2026.132949"
+      },
+      "bibtex": "@article{fang2026semanticurban,\n  title={Towards accurate urban scene understanding using point clouds: The SemanticUrban dataset},\n  author={Fang, Yuan and Zhu, Qinfeng and Cai, Yuanzhi and Fan, Lei},\n  journal={Expert Systems with Applications},\n  year={2026},\n  doi={10.1016/j.eswa.2026.132949}\n}"
+    },
+    {
+      "id": "panoramic-survey",
+      "year": 2026,
+      "venue": "Under review",
+      "venueShort": "arXiv",
+      "type": "Preprint",
+      "status": "Under review",
+      "title": "Panoramic Scene Understanding: A Survey from Distortion-Aware Engineering to Sphere-Native Modeling",
+      "authors": [
+        { "name": "Qinfeng Zhu", "self": true },
+        { "name": "Lei Fan" }
+      ],
+      "featuredRank": 2,
+      "image": "/assets/images/publications/panoramic-survey.webp",
+      "imageAlt": "Taxonomy of panoramic scene-understanding methods",
+      "summary": "A structured review of panoramic scene understanding, tracing the field from distortion-aware engineering to representations native to spherical geometry.",
+      "keywords": ["Panoramic vision", "Survey", "Spherical modeling", "Scene understanding"],
+      "links": {
+        "arXiv": "https://arxiv.org/abs/2606.27745",
+        "Project": "/projects/panoramic-scene-understanding/"
+      },
+      "bibtex": "@article{zhu2026panoramic,\n  title={Panoramic Scene Understanding: A Survey from Distortion-Aware Engineering to Sphere-Native Modeling},\n  author={Zhu, Qinfeng and Fan, Lei},\n  journal={arXiv preprint arXiv:2606.27745},\n  year={2026}\n}"
+    },
+    {
+      "id": "so3uformer",
+      "year": 2026,
+      "venue": "Under review",
+      "venueShort": "arXiv",
+      "type": "Preprint",
+      "status": "Under review",
+      "title": "SO3UFormer: Learning Intrinsic Spherical Features for Rotation-Robust Panoramic Dense Prediction",
+      "authors": [
+        { "name": "Qinfeng Zhu", "self": true },
+        { "name": "Yunxi Jiang" },
+        { "name": "Lei Fan" }
+      ],
+      "featuredRank": 3,
+      "image": "/assets/images/publications/so3uformer.webp",
+      "imageAlt": "SO3UFormer sphere-native architecture",
+      "summary": "A sphere-native architecture for learning intrinsic spherical features and improving rotation robustness in panoramic dense prediction.",
+      "keywords": ["Panoramic vision", "SO(3)", "Dense prediction", "Spherical features"],
+      "links": {
+        "arXiv": "https://arxiv.org/abs/2602.22867",
+        "GitHub": "https://github.com/zhuqinfeng1999/SO3UFormer",
+        "Project": "/projects/so3uformer/"
+      },
+      "bibtex": "@article{zhu2026so3uformer,\n  title={SO3UFormer: Learning Intrinsic Spherical Features for Rotation-Robust Panoramic Dense Prediction},\n  author={Zhu, Qinfeng and Jiang, Yunxi and Fan, Lei},\n  journal={arXiv preprint arXiv:2602.22867},\n  year={2026}\n}"
+    },
+    {
+      "id": "point-cloud-augmentation",
+      "year": 2024,
+      "venue": "Pattern Recognition",
+      "venueShort": "PR",
+      "type": "Journal",
+      "title": "Advancements in Point Cloud Data Augmentation for Deep Learning: A Survey",
+      "authors": [
+        { "name": "Qinfeng Zhu", "self": true },
+        { "name": "Lei Fan" },
+        { "name": "Ningxin Weng" }
+      ],
+      "featuredRank": 4,
+      "image": "/assets/images/publications/point-cloud-augmentation.webp",
+      "imageAlt": "Examples of point-cloud data-augmentation strategies",
+      "summary": "A systematic account of point-cloud augmentation strategies, their design choices and their role in robust 3D deep learning.",
+      "keywords": ["Point cloud", "Data augmentation", "Survey", "Deep learning"],
+      "links": {
+        "DOI": "https://doi.org/10.1016/j.patcog.2024.110532",
+        "arXiv": "https://arxiv.org/abs/2308.12113",
+        "Zhihu": "https://www.zhihu.com/question/319291048/answer/3500262341"
+      },
+      "bibtex": "@article{zhu2024pointcloudaugmentation,\n  title={Advancements in Point Cloud Data Augmentation for Deep Learning: A Survey},\n  author={Zhu, Qinfeng and Fan, Lei and Weng, Ningxin},\n  journal={Pattern Recognition},\n  year={2024},\n  doi={10.1016/j.patcog.2024.110532}\n}"
+    },
+    {
+      "id": "classwise-crf",
+      "year": 2026,
+      "venue": "Neural Networks",
+      "venueShort": "NN",
+      "type": "Journal",
+      "title": "ClassWise-CRF: Category-Specific Fusion for Enhanced Semantic Segmentation of Remote Sensing Imagery",
+      "authors": [
+        { "name": "Qinfeng Zhu", "self": true },
+        { "name": "Yunxi Jiang" },
+        { "name": "Lei Fan" }
+      ],
+      "featuredRank": 5,
+      "image": "/assets/images/publications/classwise-crf.webp",
+      "imageAlt": "ClassWise-CRF expert-network fusion concept",
+      "summary": "A category-specific fusion approach designed to improve semantic segmentation of remotely sensed imagery.",
+      "keywords": ["Remote sensing", "Semantic segmentation", "Fusion", "CRF"],
+      "links": {
+        "DOI": "https://doi.org/10.1016/j.neunet.2025.108485",
+        "arXiv": "https://doi.org/10.48550/arXiv.2504.21491"
+      },
+      "bibtex": "@article{zhu2026classwisecrf,\n  title={ClassWise-CRF: Category-Specific Fusion for Enhanced Semantic Segmentation of Remote Sensing Imagery},\n  author={Zhu, Qinfeng and Jiang, Yunxi and Fan, Lei},\n  journal={Neural Networks},\n  year={2026},\n  doi={10.1016/j.neunet.2025.108485}\n}"
+    },
+    {
+      "id": "rethinking-mamba",
+      "year": 2024,
+      "venue": "IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing",
+      "venueShort": "IEEE JSTARS",
+      "type": "Journal",
+      "title": "Rethinking Scanning Strategies with Vision Mamba in Semantic Segmentation of Remote Sensing Imagery",
+      "authors": [
+        { "name": "Qinfeng Zhu", "self": true },
+        { "name": "Yuan Fang" },
+        { "name": "Yuanzhi Cai" },
+        { "name": "Cheng Chen" },
+        { "name": "Lei Fan" }
+      ],
+      "featuredRank": 6,
+      "image": "/assets/images/publications/mamba-scanning.webp",
+      "imageAlt": "Directional scanning strategies for remote-sensing imagery",
+      "summary": "An investigation of how scanning order shapes Vision Mamba performance for semantic segmentation of remote-sensing imagery.",
+      "keywords": ["Remote sensing", "Vision Mamba", "Semantic segmentation", "Scanning strategy"],
+      "links": {
+        "DOI": "https://doi.org/10.1109/JSTARS.2024.3472296",
+        "arXiv": "https://arxiv.org/abs/2405.08493"
+      },
+      "bibtex": "@article{zhu2024rethinking,\n  title={Rethinking Scanning Strategies with Vision Mamba in Semantic Segmentation of Remote Sensing Imagery},\n  author={Zhu, Qinfeng and Fang, Yuan and Cai, Yuanzhi and Chen, Cheng and Fan, Lei},\n  journal={IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing},\n  year={2024},\n  doi={10.1109/JSTARS.2024.3472296}\n}"
+    },
+    {
+      "id": "indoorms",
+      "year": 2025,
+      "venue": "IEEE Sensors Journal",
+      "venueShort": "IEEE Sensors",
+      "type": "Journal",
+      "title": "IndoorMS: A Multispectral Dataset for Semantic Segmentation in Indoor Scene Understanding",
+      "authors": [
+        { "name": "Qinfeng Zhu", "self": true },
+        { "name": "Jingjing Xiao" },
+        { "name": "Lei Fan" }
+      ],
+      "featuredRank": 7,
+      "image": "/assets/images/publications/indoorms.webp",
+      "imageAlt": "IndoorMS multispectral dataset collection and training workflow",
+      "summary": "A multispectral benchmark for semantic segmentation across diverse indoor scenes.",
+      "keywords": ["Multispectral", "Dataset", "Indoor scenes", "Semantic segmentation"],
+      "links": {
+        "DOI": "https://doi.org/10.1109/JSEN.2025.3559348",
+        "Project": "/IndoorMS/",
+        "GitHub": "https://github.com/zhuqinfeng1999/IndoorMS"
+      },
+      "bibtex": "@article{zhu2025indoorms,\n  title={IndoorMS: A Multispectral Dataset for Semantic Segmentation in Indoor Scene Understanding},\n  author={Zhu, Qinfeng and Xiao, Jingjing and Fan, Lei},\n  journal={IEEE Sensors Journal},\n  year={2025},\n  doi={10.1109/JSEN.2025.3559348}\n}"
+    },
+    {
+      "id": "generalised-pretraining",
+      "year": 2026,
+      "venue": "Computer Graphics International — Lecture Notes in Computer Science",
+      "venueShort": "CGI · LNCS",
+      "type": "Conference",
+      "title": "A generalised pre-training strategy for deep learning networks in semantic segmentation of remotely sensed images",
+      "authors": [
+        { "name": "Yuan Fang" },
+        { "name": "Yuanzhi Cai" },
+        { "name": "Jagannath Aryal" },
+        { "name": "Qinfeng Zhu", "self": true },
+        { "name": "Hong Huang" },
+        { "name": "Cheng Zhang" },
+        { "name": "Lei Fan" }
+      ],
+      "summary": "A generalised pre-training strategy for semantic-segmentation networks operating on remotely sensed images.",
+      "keywords": ["Remote sensing", "Pre-training", "Semantic segmentation"],
+      "links": {
+        "Springer": "https://link.springer.com/chapter/10.1007/978-3-032-22261-9_28",
+        "arXiv PDF": "https://arxiv.org/pdf/2604.27704"
+      },
+      "bibtex": "@inproceedings{fang2026pretraining,\n  title={A generalised pre-training strategy for deep learning networks in semantic segmentation of remotely sensed images},\n  author={Fang, Yuan and Cai, Yuanzhi and Aryal, Jagannath and Zhu, Qinfeng and Huang, Hong and Zhang, Cheng and Fan, Lei},\n  booktitle={Computer Graphics International},\n  year={2026}\n}"
+    },
+    {
+      "id": "alphaearth",
+      "year": 2026,
+      "venue": "arXiv",
+      "venueShort": "arXiv",
+      "type": "Preprint",
+      "title": "From Landslide Conditioning Factors to Satellite Embeddings: Evaluating the Utilisation of Google AlphaEarth for Landslide Susceptibility Mapping using Deep Learning",
+      "authors": [
+        { "name": "Yusen Chen" },
+        { "name": "Qinfeng Zhu", "self": true },
+        { "name": "Lei Fan" }
+      ],
+      "summary": "An evaluation of satellite embeddings for deep-learning-based landslide susceptibility mapping.",
+      "keywords": ["Satellite embeddings", "Landslide", "Remote sensing", "Deep learning"],
+      "links": { "arXiv": "https://arxiv.org/abs/2601.07268" },
+      "bibtex": "@article{chen2026alphaearth,\n  title={From Landslide Conditioning Factors to Satellite Embeddings: Evaluating the Utilisation of Google AlphaEarth for Landslide Susceptibility Mapping using Deep Learning},\n  author={Chen, Yusen and Zhu, Qinfeng and Fan, Lei},\n  journal={arXiv preprint arXiv:2601.07268},\n  year={2026}\n}"
+    },
+    {
+      "id": "swinmamba",
+      "year": 2026,
+      "venue": "Digital Signal Processing",
+      "venueShort": "DSP",
+      "type": "Journal",
+      "title": "SwinMamba: A hybrid local-global mamba framework for enhancing semantic segmentation of remotely sensed images",
+      "authors": [
+        { "name": "Qinfeng Zhu", "self": true },
+        { "name": "Han Li" },
+        { "name": "Liang He" },
+        { "name": "Lei Fan" }
+      ],
+      "summary": "A hybrid local-global Mamba framework for semantic segmentation of remotely sensed images.",
+      "keywords": ["Remote sensing", "Mamba", "Semantic segmentation", "Local-global modeling"],
+      "links": {
+        "Journal": "https://www.sciencedirect.com/science/article/pii/S105120042600148X",
+        "DOI": "https://doi.org/10.1016/j.dsp.2026.106029",
+        "arXiv": "https://arxiv.org/abs/2509.20918"
+      },
+      "bibtex": "@article{zhu2026swinmamba,\n  title={SwinMamba: A hybrid local-global mamba framework for enhancing semantic segmentation of remotely sensed images},\n  author={Zhu, Qinfeng and Li, Han and He, Liang and Fan, Lei},\n  journal={Digital Signal Processing},\n  year={2026},\n  doi={10.1016/j.dsp.2026.106029}\n}"
+    },
+    {
+      "id": "wastems",
+      "year": 2025,
+      "venue": "International Conference on Multimedia Modelling",
+      "venueShort": "MMM",
+      "type": "Conference",
+      "title": "Enhancing Environmental Monitoring through Multispectral Imaging: The WasteMS Dataset for Semantic Segmentation of Lakeside Waste",
+      "authors": [
+        { "name": "Qinfeng Zhu", "self": true },
+        { "name": "Ningxin Weng" },
+        { "name": "Lei Fan" },
+        { "name": "Yuanzhi Cai" }
+      ],
+      "summary": "A multispectral dataset for semantic segmentation of lakeside waste in environmental monitoring.",
+      "keywords": ["Multispectral", "Dataset", "Environmental monitoring", "Semantic segmentation"],
+      "links": {
+        "DOI": "https://doi.org/10.1007/978-981-96-2054-8_27",
+        "arXiv": "https://arxiv.org/abs/2407.17028",
+        "GitHub": "https://github.com/zhuqinfeng1999/WasteMS"
+      },
+      "bibtex": "@inproceedings{zhu2025wastems,\n  title={Enhancing Environmental Monitoring through Multispectral Imaging: The WasteMS Dataset for Semantic Segmentation of Lakeside Waste},\n  author={Zhu, Qinfeng and Weng, Ningxin and Fan, Lei and Cai, Yuanzhi},\n  booktitle={International Conference on Multimedia Modelling},\n  year={2025}\n}"
+    },
+    {
+      "id": "samba",
+      "year": 2024,
+      "venue": "Heliyon",
+      "venueShort": "Heliyon",
+      "type": "Journal",
+      "title": "Samba: Semantic Segmentation of Remotely Sensed Images with State Space Model",
+      "authors": [
+        { "name": "Qinfeng Zhu", "self": true },
+        { "name": "Yuanzhi Cai" },
+        { "name": "Yuan Fang" },
+        { "name": "Yihan Yang" },
+        { "name": "Cheng Chen" },
+        { "name": "Lei Fan" },
+        { "name": "Anh Nguyen" }
+      ],
+      "summary": "A state-space-model approach to semantic segmentation of remotely sensed images.",
+      "keywords": ["Remote sensing", "State space model", "Semantic segmentation"],
+      "links": {
+        "DOI": "https://doi.org/10.1016/j.heliyon.2024.e38495",
+        "arXiv": "https://arxiv.org/abs/2404.01705",
+        "GitHub": "https://github.com/zhuqinfeng1999/Samba"
+      },
+      "bibtex": "@article{zhu2024samba,\n  title={Samba: Semantic Segmentation of Remotely Sensed Images with State Space Model},\n  author={Zhu, Qinfeng and Cai, Yuanzhi and Fang, Yuan and Yang, Yihan and Chen, Cheng and Fan, Lei and Nguyen, Anh},\n  journal={Heliyon},\n  year={2024},\n  doi={10.1016/j.heliyon.2024.e38495}\n}"
+    },
+    {
+      "id": "point-cloud-colorization",
+      "year": 2024,
+      "venue": "International Conference on Vision, Image and Signal Processing",
+      "venueShort": "ICVISP",
+      "type": "Conference",
+      "title": "Evaluating the Impact of Point Cloud Colorization on Semantic Segmentation Accuracy",
+      "authors": [
+        { "name": "Qinfeng Zhu", "self": true },
+        { "name": "Jiaze Cao" },
+        { "name": "Yuanzhi Cai" },
+        { "name": "Lei Fan" }
+      ],
+      "summary": "An empirical evaluation of how point-cloud colorization affects semantic segmentation accuracy.",
+      "keywords": ["Point cloud", "Colorization", "Semantic segmentation"],
+      "links": { "arXiv": "https://arxiv.org/abs/2410.06725" },
+      "bibtex": "@inproceedings{zhu2024colorization,\n  title={Evaluating the Impact of Point Cloud Colorization on Semantic Segmentation Accuracy},\n  author={Zhu, Qinfeng and Cao, Jiaze and Cai, Yuanzhi and Fan, Lei},\n  booktitle={International Conference on Vision, Image and Signal Processing},\n  year={2024}\n}"
+    },
+    {
+      "id": "seg-lstm",
+      "year": 2024,
+      "venue": "International Conference on Signal and Image Processing",
+      "venueShort": "SSIP",
+      "type": "Conference",
+      "title": "Seg-LSTM: Performance of xLSTM for Semantic Segmentation of Remotely Sensed Images",
+      "authors": [
+        { "name": "Qinfeng Zhu", "self": true },
+        { "name": "Yuanzhi Cai" },
+        { "name": "Lei Fan" }
+      ],
+      "summary": "An evaluation of xLSTM for semantic segmentation of remotely sensed images.",
+      "keywords": ["Remote sensing", "xLSTM", "Semantic segmentation"],
+      "links": {
+        "arXiv": "https://arxiv.org/abs/2406.14086",
+        "GitHub": "https://github.com/zhuqinfeng1999/Seg-LSTM"
+      },
+      "bibtex": "@inproceedings{zhu2024seglstm,\n  title={Seg-LSTM: Performance of xLSTM for Semantic Segmentation of Remotely Sensed Images},\n  author={Zhu, Qinfeng and Cai, Yuanzhi and Fan, Lei},\n  booktitle={International Conference on Signal and Image Processing},\n  year={2024}\n}"
+    },
+    {
+      "id": "mscrackmamba",
+      "year": 2025,
+      "venue": "IEEE International Conference on Big Data and Artificial Intelligence",
+      "venueShort": "IEEE BDAI",
+      "type": "Conference",
+      "title": "MSCrackMamba: Leveraging Vision Mamba for Crack Detection in Fused Multispectral Imagery",
+      "authors": [
+        { "name": "Qinfeng Zhu", "self": true },
+        { "name": "Yuan Fang" },
+        { "name": "Lei Fan" }
+      ],
+      "summary": "A Vision Mamba method for crack detection in fused multispectral imagery.",
+      "keywords": ["Multispectral", "Crack detection", "Vision Mamba"],
+      "links": {
+        "DOI": "https://doi.org/10.1109/BDAI66031.2025.11325509",
+        "arXiv": "https://arxiv.org/abs/2412.06211"
+      },
+      "bibtex": "@inproceedings{zhu2025mscrackmamba,\n  title={MSCrackMamba: Leveraging Vision Mamba for Crack Detection in Fused Multispectral Imagery},\n  author={Zhu, Qinfeng and Fang, Yuan and Fan, Lei},\n  booktitle={IEEE International Conference on Big Data and Artificial Intelligence},\n  year={2025}\n}"
+    },
+    {
+      "id": "beam-flange",
+      "year": 2024,
+      "venue": "Buildings",
+      "venueShort": "Buildings",
+      "type": "Journal",
+      "title": "Algorithm-Driven Extraction of Point Cloud Data Representing Bottom Flanges of Beams in a Complex Steel Frame Structure for Deformation Measurement",
+      "authors": [
+        { "name": "Yang Zhao" },
+        { "name": "Dufei Wang" },
+        { "name": "Qinfeng Zhu", "self": true },
+        { "name": "Lei Fan" },
+        { "name": "Yuanfeng Bao" }
+      ],
+      "summary": "Algorithm-driven extraction of point-cloud measurements for deformation analysis of complex steel-frame structures.",
+      "keywords": ["Point cloud", "Structural monitoring", "Deformation measurement"],
+      "links": { "DOI": "https://doi.org/10.3390/buildings14092847" },
+      "bibtex": "@article{zhao2024beam,\n  title={Algorithm-Driven Extraction of Point Cloud Data Representing Bottom Flanges of Beams in a Complex Steel Frame Structure for Deformation Measurement},\n  author={Zhao, Yang and Wang, Dufei and Zhu, Qinfeng and Fan, Lei and Bao, Yuanfeng},\n  journal={Buildings},\n  year={2024},\n  doi={10.3390/buildings14092847}\n}"
+    }
+  ],
+  "projects": [
+    {
+      "id": "semanticurban",
+      "title": "SemanticUrban",
+      "type": "Dataset",
+      "year": 2026,
+      "eyebrow": "Point-cloud benchmark",
+      "description": "A large-scale, high-resolution terrestrial laser-scanning dataset for accurate urban scene understanding.",
+      "image": "/static/images/SemanticUrban1.jpg",
+      "href": "/SemanticUrban/",
+      "tags": ["3D vision", "Urban scenes", "Semantic segmentation"],
+      "links": {
+        "Project page": "/SemanticUrban/",
+        "GitHub": "https://github.com/YuanFangFF/SemanticUrban",
+        "DOI": "https://doi.org/10.1016/j.eswa.2026.132949"
+      }
+    },
+    {
+      "id": "indoorms",
+      "title": "IndoorMS",
+      "type": "Dataset",
+      "year": 2025,
+      "eyebrow": "Multispectral benchmark",
+      "description": "A dedicated multispectral benchmark for semantic segmentation across diverse indoor scenes.",
+      "image": "/static/images/IndoorMS2.jpg",
+      "href": "/IndoorMS/",
+      "tags": ["Multispectral", "Indoor scenes", "Semantic segmentation"],
+      "links": {
+        "Project page": "/IndoorMS/",
+        "GitHub": "https://github.com/zhuqinfeng1999/IndoorMS",
+        "DOI": "https://doi.org/10.1109/JSEN.2025.3559348"
+      }
+    },
+    {
+      "id": "so3uformer",
+      "title": "SO3UFormer",
+      "type": "Method",
+      "year": 2026,
+      "eyebrow": "Sphere-native perception",
+      "description": "Intrinsic spherical features for rotation-robust panoramic dense prediction.",
+      "image": "/assets/images/publications/so3uformer.webp",
+      "href": "/projects/so3uformer/",
+      "tags": ["Panoramic vision", "SO(3)", "Dense prediction"],
+      "links": {
+        "Project page": "/projects/so3uformer/",
+        "GitHub": "https://github.com/zhuqinfeng1999/SO3UFormer",
+        "arXiv": "https://arxiv.org/abs/2602.22867"
+      }
+    },
+    {
+      "id": "panoramic-survey",
+      "title": "Panoramic Scene Understanding",
+      "type": "Research map",
+      "year": 2026,
+      "eyebrow": "Survey and taxonomy",
+      "description": "A visual research map from distortion-aware engineering to sphere-native modeling.",
+      "image": "/assets/images/publications/panoramic-survey.webp",
+      "href": "/projects/panoramic-scene-understanding/",
+      "tags": ["Panoramic vision", "Survey", "Spherical modeling"],
+      "links": {
+        "Project page": "/projects/panoramic-scene-understanding/",
+        "arXiv": "https://arxiv.org/abs/2606.27745"
+      }
+    }
+  ],
+  "news": [
+    { "date": "2026-05", "label": "May 2026", "title": "SemanticUrban", "text": "accepted by Expert Systems with Applications." },
+    { "date": "2026-02", "label": "Feb 2026", "title": "SwinMamba", "text": "accepted by Digital Signal Processing." },
+    { "date": "2025-12", "label": "Dec 2025", "title": "ClassWise-CRF", "text": "accepted by Neural Networks 2026." },
+    { "date": "2025-10", "label": "Oct 2025", "title": "IndoorMS", "text": "accepted by IEEE Sensors Journal." },
+    { "date": "2024-10", "label": "Oct 2024", "title": "WasteMS", "text": "accepted by MMM 2025." },
+    { "date": "2024-10", "label": "Oct 2024", "title": "Rethinking Scanning Strategies with Vision Mamba", "text": "accepted by IEEE JSTARS." },
+    { "date": "2024-04", "label": "Apr 2024", "title": "Advancements in Point Cloud Data Augmentation", "text": "accepted by Pattern Recognition." }
+  ]
+}
