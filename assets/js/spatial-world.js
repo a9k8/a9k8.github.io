@@ -9,6 +9,30 @@
   };
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* Fixed 2D cluster layout for the embedding-space panel, one per land-cover
+     class - arranged so clusters don't overlap, not derived from any real
+     dimensionality reduction (there's no real model here, just the idea of one). */
+  const EMBEDDING_CLUSTERS = {
+    ground: { x: .22, y: .68 },
+    road: { x: .5, y: .82 },
+    marking: { x: .58, y: .6 },
+    building: { x: .78, y: .28 },
+    vegetation: { x: .2, y: .22 },
+    street: { x: .42, y: .38 },
+    vehicle: { x: .68, y: .58 },
+    water: { x: .85, y: .78 }
+  };
+  const EMBEDDING_LABELS = {
+    ground: 'BARE EARTH',
+    road: 'IMPERVIOUS SURFACE',
+    marking: 'ROAD MARKING',
+    building: 'BUILT-UP',
+    vegetation: 'VEGETATION',
+    street: 'URBAN FURNITURE',
+    vehicle: 'VEHICLE',
+    water: 'WATER'
+  };
+
   class SpatialWorld {
     constructor(canvas) {
       this.canvas = canvas;
@@ -53,6 +77,9 @@
         water: '#58c9df'
       };
       this.readoutCopy = ['Multispectral footprint', 'Move the observation window · click to capture a local sample', 'Remote sensing', 'Move footprint · click to capture'];
+      this.embeddingSamples = [];
+      this.embeddingScatter = [];
+      this.embeddingQuery = { x: .5, y: .5, kind: 'ground' };
 
       this.generateWorld();
       this.bind();
@@ -231,6 +258,45 @@
       for (let index = 0; index < 82; index += 1) {
         this.stars.push({ x: this.random(), y: this.random() * .56, alpha: .025 + this.random() * .12, size: this.random() > .9 ? 1.25 : .65 });
       }
+
+      this.buildEmbeddingField();
+    }
+
+    /* A small subsample of the real point cloud (grouped by class, capped per
+       class) drives the embedding query each frame - cheap enough to scan every
+       frame without walking the full multi-thousand-point city. The scatter dots
+       are purely decorative, jittered around each class's fixed cluster center. */
+    buildEmbeddingField() {
+      const byKind = new Map();
+      this.points.forEach((point) => {
+        if (!EMBEDDING_CLUSTERS[point.kind]) return;
+        if (!byKind.has(point.kind)) byKind.set(point.kind, []);
+        const list = byKind.get(point.kind);
+        if (list.length < 400) list.push(point);
+      });
+
+      this.embeddingSamples = [];
+      byKind.forEach((list, kind) => {
+        const stride = Math.max(1, Math.floor(list.length / 40));
+        for (let index = 0; index < list.length; index += stride) {
+          this.embeddingSamples.push({ x: list[index].x, z: list[index].z, kind });
+        }
+      });
+
+      this.embeddingScatter = [];
+      Object.keys(EMBEDDING_CLUSTERS).forEach((kind) => {
+        const center = EMBEDDING_CLUSTERS[kind];
+        const count = byKind.has(kind) ? 12 : 5;
+        for (let index = 0; index < count; index += 1) {
+          const angle = this.random() * Math.PI * 2;
+          const radius = .05 + this.random() * .09;
+          this.embeddingScatter.push({
+            x: clamp(center.x + Math.cos(angle) * radius, .04, .96),
+            y: clamp(center.y + Math.sin(angle) * radius, .04, .96),
+            kind
+          });
+        }
+      });
     }
 
     bind() {
@@ -411,6 +477,50 @@
       this.aerial.x += (targetX - this.aerial.x) * ease;
       this.aerial.z += (targetZ - this.aerial.z) * ease;
       this.swathZ = this.aerial.z;
+    }
+
+    /* Weights each class sample by how close it is to the current observation
+       footprint (same falloff shape as semanticAmount), then places the query
+       marker at the weighted average of that class mix's cluster centers - a
+       patch straddling two classes sits between their clusters, same as a real
+       embedding for a mixed patch would. */
+    updateEmbeddingQuery() {
+      const weights = {};
+      let totalWeight = 0;
+      this.embeddingSamples.forEach((sample) => {
+        const footprintDistance = Math.max(
+          Math.abs(sample.x - this.aerial.x) / 2.45,
+          Math.abs(sample.z - this.aerial.z) / 1.28
+        );
+        const weight = 1 - smoothstep(.7, 1.15, footprintDistance);
+        if (weight <= 0) return;
+        weights[sample.kind] = (weights[sample.kind] || 0) + weight;
+        totalWeight += weight;
+      });
+
+      let targetX = this.embeddingQuery.x;
+      let targetY = this.embeddingQuery.y;
+      let dominantKind = this.embeddingQuery.kind;
+      if (totalWeight > 0) {
+        targetX = 0;
+        targetY = 0;
+        let bestWeight = 0;
+        Object.keys(weights).forEach((kind) => {
+          const proportion = weights[kind] / totalWeight;
+          const center = EMBEDDING_CLUSTERS[kind];
+          targetX += center.x * proportion;
+          targetY += center.y * proportion;
+          if (weights[kind] > bestWeight) {
+            bestWeight = weights[kind];
+            dominantKind = kind;
+          }
+        });
+      }
+
+      const ease = reducedMotion ? 1 : .06;
+      this.embeddingQuery.x += (targetX - this.embeddingQuery.x) * ease;
+      this.embeddingQuery.y += (targetY - this.embeddingQuery.y) * ease;
+      this.embeddingQuery.kind = dominantKind;
     }
 
     project(point) {
@@ -597,6 +707,64 @@
       }
     }
 
+    /* The hero canvas is CSS-masked to fade near the left edge on desktop
+       (where the hero copy sits) and near the bottom edge on mobile (where the
+       layout is stacked), so the panel is anchored differently per breakpoint
+       to land somewhere that's actually visible through the mask. */
+    drawEmbeddingPanel(time) {
+      const context = this.context;
+      const panelWidth = this.mobile ? 128 : 158;
+      const panelHeight = this.mobile ? 92 : 112;
+      const panelX = this.mobile ? this.width * .06 : this.width * .35;
+      const panelY = this.mobile ? this.height * .08 : this.height * .58;
+
+      context.save();
+      context.fillStyle = 'rgba(7,14,20,.55)';
+      context.strokeStyle = 'rgba(156,231,239,.22)';
+      context.lineWidth = 1;
+      context.beginPath();
+      context.roundRect(panelX, panelY, panelWidth, panelHeight, 8);
+      context.fill();
+      context.stroke();
+
+      context.fillStyle = 'rgba(202,233,239,.7)';
+      context.font = '7px "DM Mono", monospace';
+      context.fillText('EMBEDDING SPACE', panelX + 8, panelY + 14);
+
+      const plotX = panelX + 6;
+      const plotY = panelY + 20;
+      const plotW = panelWidth - 12;
+      const plotH = panelHeight - 34;
+
+      this.embeddingScatter.forEach((dot) => {
+        context.fillStyle = this.semanticColors[dot.kind];
+        context.globalAlpha = .5;
+        context.fillRect(plotX + dot.x * plotW - .8, plotY + dot.y * plotH - .8, 1.6, 1.6);
+      });
+      context.globalAlpha = 1;
+
+      const queryX = plotX + this.embeddingQuery.x * plotW;
+      const queryY = plotY + this.embeddingQuery.y * plotH;
+      const queryColor = this.semanticColors[this.embeddingQuery.kind] || '#9ce7ef';
+      const pulse = reducedMotion ? 0 : (Math.sin(time * .0032) + 1) * .5;
+
+      context.strokeStyle = `${queryColor}70`;
+      context.lineWidth = .8;
+      context.beginPath();
+      context.arc(queryX, queryY, 5 + pulse * 2.2, 0, Math.PI * 2);
+      context.stroke();
+      context.fillStyle = queryColor;
+      context.beginPath();
+      context.arc(queryX, queryY, 2.1, 0, Math.PI * 2);
+      context.fill();
+
+      context.fillStyle = 'rgba(188,204,218,.68)';
+      context.font = '7px "DM Mono", monospace';
+      const label = EMBEDDING_LABELS[this.embeddingQuery.kind] || this.embeddingQuery.kind.toUpperCase();
+      context.fillText(`→ ${label}`, panelX + 8, panelY + panelHeight - 8);
+      context.restore();
+    }
+
     drawFog() {
       const context = this.context;
       const fog = context.createLinearGradient(0, 0, 0, this.height);
@@ -617,10 +785,12 @@
       this.lastTime = time;
       this.cameraFor(time);
       this.updateModeInteraction(time);
+      this.updateEmbeddingQuery();
       this.drawBackground(time);
       this.drawPoints(time);
       this.drawAerialOverlay(time);
       this.drawFog();
+      this.drawEmbeddingPanel(time);
       if (!reducedMotion && this.visible && this.documentVisible) {
         this.frame = requestAnimationFrame((next) => this.draw(next));
       }
