@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#05070a">
+  <meta name="description" content="SemanticUrban is a large-scale, high-resolution terrestrial laser scanning point-cloud dataset with 150 urban scenes, approximately four billion labelled points and 23 semantic classes.">
+  <meta name="keywords" content="SemanticUrban, point cloud dataset, terrestrial laser scanning, semantic segmentation, urban scene understanding, 3D vision">
+  <meta property="og:title" content="SemanticUrban — Urban point-cloud dataset">
+  <meta property="og:description" content="150 urban scenes, approximately four billion labelled points and 23 semantic classes for high-resolution 3D scene understanding.">
+  <meta property="og:url" content="https://zhuqinfeng1999.github.io/SemanticUrban/">
+  <meta property="og:image" content="https://zhuqinfeng1999.github.io/static/images/SemanticUrban1.jpg">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SemanticUrban Dataset">
+  <meta name="twitter:description" content="A large-scale high-resolution TLS point-cloud benchmark for urban scene understanding.">
+  <meta name="twitter:image" content="https://zhuqinfeng1999.github.io/static/images/SemanticUrban1.jpg">
+  <title>SemanticUrban Dataset — Qinfeng Zhu</title>
+  <link rel="canonical" href="https://zhuqinfeng1999.github.io/SemanticUrban/">
+  <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/cosmic.css?v=15">
+  <link rel="stylesheet" href="/assets/css/datasets.css?v=2">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "SemanticUrban",
+    "description": "A large-scale high-resolution terrestrial laser scanning point-cloud dataset of 150 urban scenes with approximately four billion labelled points and 23 semantic classes.",
+    "url": "https://zhuqinfeng1999.github.io/SemanticUrban/",
+    "sameAs": ["https://github.com/YuanFangFF/SemanticUrban", "https://doi.org/10.1016/j.eswa.2026.132949"],
+    "creator": [
+      {"@type":"Person","name":"Yuan Fang"},
+      {"@type":"Person","name":"Qinfeng Zhu","url":"https://zhuqinfeng1999.github.io/"},
+      {"@type":"Person","name":"Yuanzhi Cai"},
+      {"@type":"Person","name":"Lei Fan"}
+    ],
+    "keywords": ["point clouds", "semantic segmentation", "terrestrial laser scanning", "urban scene understanding"]
+  }
+  </script>
+</head>
+<body class="dataset-page semantic-urban">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="page-progress" aria-hidden="true"><i data-page-progress></i></div>
+  <div class="noise" aria-hidden="true"></div>
+  <header class="site-header" data-header>
+    <nav class="nav-pill" aria-label="Primary navigation">
+      <a class="monogram" href="/" aria-label="Qinfeng Zhu — home"><span>QZ</span></a>
+      <span class="nav-divider" aria-hidden="true"></span>
+      <div class="nav-links" data-nav-links>
+        <a href="/">Home</a><a href="/research/">Research Atlas</a><a href="/publications/">Publications</a><a class="active" href="/projects/">Projects</a>
+      </div>
+      <span class="nav-divider nav-divider-end" aria-hidden="true"></span>
+      <button class="command-trigger" data-command-trigger type="button" aria-label="Open site search"><span>Search</span><kbd>⌘K</kbd></button>
+      <a class="nav-contact" href="mailto:zhuqinfeng1999@gmail.com">Say hello ↗</a>
+      <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-nav-toggle><span></span><span></span></button>
+    </nav>
+  </header>
+  <main id="main">
+    <section class="dataset-hero" aria-labelledby="dataset-title">
+      <div class="dataset-hero-media" aria-hidden="true"><img src="/static/images/SemanticUrban1.jpg" alt=""></div>
+      <div class="dataset-hero-glow" aria-hidden="true"></div>
+      <div class="dataset-hero-inner shell">
+        <div class="dataset-hero-topline"><span>Open research dataset · 2026</span><span>Terrestrial LiDAR · 3D scene understanding</span></div>
+        <p class="dataset-kicker">Expert Systems with Applications · Co-first author</p>
+        <h1 class="dataset-title" id="dataset-title">Semantic<br><em>Urban.</em></h1>
+        <p class="dataset-paper-title">Towards Accurate Urban Scene Understanding using Point Clouds: The SemanticUrban Dataset</p>
+        <p class="dataset-authors">
+          <a href="https://scholar.google.com/citations?user=VNgUYX4AAAAJ&hl=en&authuser=1" target="_blank" rel="noreferrer">Yuan Fang</a><sup>1,2,†</sup>
+          <a href="https://zhuqinfeng1999.github.io/">Qinfeng Zhu</a><sup>1,2,†</sup>
+          <a href="https://people.csiro.au/c/y/yuanzhi-cai" target="_blank" rel="noreferrer">Yuanzhi Cai</a><sup>3</sup>
+          <a href="https://scholar.xjtlu.edu.cn/en/persons/LeiFan" target="_blank" rel="noreferrer">Lei Fan</a><sup>2,*</sup>
+        </p>
+        <p class="dataset-authors"><span><sup>†</sup> Equal contribution</span><span><sup>*</sup> Corresponding author</span></p>
+        <div class="dataset-actions">
+          <a class="button button-primary" href="https://www.sciencedirect.com/science/article/pii/S0957417426018610" target="_blank" rel="noreferrer">Read paper ↗</a>
+          <a class="button button-ghost" href="https://github.com/YuanFangFF/SemanticUrban" target="_blank" rel="noreferrer">GitHub ↗</a>
+          <a class="button button-ghost" href="https://doi.org/10.1016/j.eswa.2026.132949" target="_blank" rel="noreferrer">DOI ↗</a>
+        </div>
+        <div class="dataset-stats" aria-label="Dataset highlights">
+          <div class="dataset-stat"><strong>150</strong><span>Urban scenes</span></div>
+          <div class="dataset-stat"><strong>≈4B</strong><span>Labelled points</span></div>
+          <div class="dataset-stat"><strong>23</strong><span>Semantic classes</span></div>
+          <div class="dataset-stat"><strong>4</strong><span>Chinese cities</span></div>
+        </div>
+      </div>
+    </section>
+    <nav class="dataset-local-nav" aria-label="SemanticUrban sections">
+      <div class="shell"><a class="dataset-local-name" href="#main">SemanticUrban</a><div class="dataset-local-links"><a class="active" data-section-link href="#overview">Overview</a><a data-section-link href="#dataset">Dataset</a><a data-section-link href="#gallery">Gallery</a><a data-section-link href="#access">Access</a><a data-section-link href="#cite">Cite</a></div></div>
+    </nav>
+    <div class="dataset-paper">
+      <section class="dataset-section" id="overview" aria-labelledby="overview-title">
+        <div class="shell dataset-lead-grid">
+          <div class="dataset-lead-aside">
+            <p class="dataset-section-label">01 · Overview</p>
+            <h2 class="dataset-heading" id="overview-title">Cities,<br><em>point by point.</em></h2>
+            <p>A benchmark designed around the detail, scale and annotation accuracy required by real urban perception systems.</p>
+          </div>
+          <div>
+            <p class="dataset-abstract">A high-resolution view of the urban world where every visible surface can become <em>machine-readable structure.</em></p>
+            <div class="dataset-body-copy">
+              <p>Point clouds are essential representations of three-dimensional surfaces in real scenes and objects. Yet benchmark datasets for urban understanding have often been constrained by limited semantic detail or imprecise object boundaries.</p>
+              <p>SemanticUrban addresses this gap with 150 terrestrial laser scanning scenes and approximately four billion manually labelled points. Each point belongs to one of 23 classes, combining super-high-resolution geometry with accurate semantic categorisation, intensity and RGB information.</p>
+              <p>Representative deep-learning methods are evaluated on the benchmark, revealing challenges that motivate more accurate, scalable and detail-aware approaches to 3D urban scene understanding.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="dataset-section" id="dataset" aria-labelledby="dataset-section-title">
+        <div class="shell">
+          <p class="dataset-section-label">02 · Dataset architecture</p>
+          <h2 class="dataset-heading" id="dataset-section-title">Scale without<br><em>losing detail.</em></h2>
+          <div class="dataset-facts">
+            <article class="dataset-fact"><span>Acquisition</span><strong>Leica RTC360</strong><p>Terrestrial laser scanning with HDR imaging.</p></article>
+            <article class="dataset-fact"><span>Field of view</span><strong>360° × 300°</strong><p>Horizontal and vertical sensor coverage.</p></article>
+            <article class="dataset-fact"><span>Point attributes</span><strong>XYZ · I · RGB</strong><p>Geometry, intensity and colour for every released point.</p></article>
+            <article class="dataset-fact"><span>Benchmark split</span><strong>105 · 15 · 30</strong><p>Official train, validation and test scenes.</p></article>
+            <article class="dataset-fact"><span>Resolution</span><strong>Super-high-resolution geometry</strong><p>Fine objects and boundaries remain visible rather than disappearing during coarse aggregation.</p></article>
+            <article class="dataset-fact"><span>Released package</span><strong>0.05 m voxel benchmark</strong><p>A preprocessed version for reproducible training and evaluation; raw data is available by request.</p></article>
+          </div>
+          <figure class="dataset-figure">
+            <button class="dataset-figure-button" type="button" data-lightbox-src="/static/images/SemanticUrban1.jpg" data-lightbox-alt="SemanticUrban intensity, RGB and semantic label comparisons">
+              <img src="/static/images/SemanticUrban1.jpg" alt="SemanticUrban scenes shown as intensity, RGB colour and semantic labels" decoding="async">
+            </button>
+            <figcaption><span>Three representations of the same urban geometry: intensity, RGB and semantic labels.</span><span>Click to enlarge ↗</span></figcaption>
+          </figure>
+        </div>
+      </section>
+    </div>
+    <section class="dataset-dark" aria-labelledby="taxonomy-title">
+      <div class="shell">
+        <p class="dataset-section-label">03 · Semantic taxonomy</p>
+        <h2 class="dataset-heading" id="taxonomy-title">Twenty-three classes.<br><em>One coherent city.</em></h2>
+        <div class="taxonomy-grid" aria-label="SemanticUrban class list">
+          <span>Distortion</span><span>Road</span><span>Other man-made terrain</span><span>Building</span><span>Wall</span><span>Fence</span><span>Pole</span><span>Stairs</span><span>Traffic sign</span><span>Shrub</span><span>Tree</span><span>Grass</span><span>Soil</span><span>Person</span><span>Car</span><span>Truck</span><span>Other vehicle</span><span>Bridge</span><span>Motorcycle</span><span>Bicycle</span><span>Clutter and rubbish</span><span>Flowerbed</span><span>Reflections</span>
+        </div>
+      </div>
+    </section>
+    <div class="dataset-paper">
+      <section class="dataset-section" aria-labelledby="precision-title">
+        <div class="shell">
+          <p class="dataset-section-label">04 · Annotation precision</p>
+          <h2 class="dataset-heading" id="precision-title">Boundaries that<br><em>hold up close.</em></h2>
+          <figure class="dataset-figure">
+            <button class="dataset-figure-button" type="button" data-lightbox-src="/static/images/SemanticUrban2.jpg" data-lightbox-alt="Comparison of Semantic3D and SemanticUrban annotation quality">
+              <img src="/static/images/SemanticUrban2.jpg" alt="Comparison of Semantic3D and SemanticUrban annotation accuracy and class detail" loading="lazy" decoding="async">
+            </button>
+            <figcaption><span>SemanticUrban preserves accurate boundaries and separates fine object categories such as poles, bicycles and motorcycles.</span><span>Click to enlarge ↗</span></figcaption>
+          </figure>
+        </div>
+      </section>
+    </div>
+    <section class="dataset-dark" id="gallery" aria-labelledby="gallery-title" data-gallery>
+      <div class="shell">
+        <div class="dataset-gallery-header">
+          <div><p class="dataset-section-label">05 · Scene gallery</p><h2 class="dataset-heading" id="gallery-title">Annotated<br><em>urban worlds.</em></h2></div>
+          <div class="dataset-gallery-controls" aria-label="Gallery controls"><button type="button" data-gallery-prev aria-label="Previous scene">←</button><button type="button" data-gallery-next aria-label="Next scene">→</button></div>
+        </div>
+        <div class="dataset-gallery-viewport" data-gallery-viewport tabindex="0" aria-label="SemanticUrban annotation examples">
+          <div class="dataset-gallery-rail">
+            <figure class="dataset-gallery-card"><button type="button" data-lightbox-src="/static/images/example2.jpg" data-lightbox-alt="SemanticUrban annotated scene 01"><img src="/static/images/example2.jpg" alt="SemanticUrban annotated urban point-cloud example 1" loading="lazy" decoding="async"></button><figcaption><b>Scene 01</b><span>High-resolution semantic point cloud</span></figcaption></figure>
+            <figure class="dataset-gallery-card"><button type="button" data-lightbox-src="/static/images/example1.jpg" data-lightbox-alt="SemanticUrban annotated scene 02"><img src="/static/images/example1.jpg" alt="SemanticUrban annotated urban point-cloud example 2" loading="lazy" decoding="async"></button><figcaption><b>Scene 02</b><span>High-resolution semantic point cloud</span></figcaption></figure>
+            <figure class="dataset-gallery-card"><button type="button" data-lightbox-src="/static/images/example3.jpg" data-lightbox-alt="SemanticUrban annotated scene 03"><img src="/static/images/example3.jpg" alt="SemanticUrban annotated urban point-cloud example 3" loading="lazy" decoding="async"></button><figcaption><b>Scene 03</b><span>High-resolution semantic point cloud</span></figcaption></figure>
+            <figure class="dataset-gallery-card"><button type="button" data-lightbox-src="/static/images/example4.jpg" data-lightbox-alt="SemanticUrban annotated scene 04"><img src="/static/images/example4.jpg" alt="SemanticUrban annotated urban point-cloud example 4" loading="lazy" decoding="async"></button><figcaption><b>Scene 04</b><span>High-resolution semantic point cloud</span></figcaption></figure>
+            <figure class="dataset-gallery-card"><button type="button" data-lightbox-src="/static/images/example5.jpg" data-lightbox-alt="SemanticUrban annotated scene 05"><img src="/static/images/example5.jpg" alt="SemanticUrban annotated urban point-cloud example 5" loading="lazy" decoding="async"></button><figcaption><b>Scene 05</b><span>High-resolution semantic point cloud</span></figcaption></figure>
+            <figure class="dataset-gallery-card"><button type="button" data-lightbox-src="/static/images/example6.jpg" data-lightbox-alt="SemanticUrban annotated scene 06"><img src="/static/images/example6.jpg" alt="SemanticUrban annotated urban point-cloud example 6" loading="lazy" decoding="async"></button><figcaption><b>Scene 06</b><span>High-resolution semantic point cloud</span></figcaption></figure>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="dataset-paper">
+      <section class="dataset-section" id="access" aria-labelledby="access-title">
+        <div class="shell">
+          <p class="dataset-section-label">06 · Access</p>
+          <h2 class="dataset-heading" id="access-title">Enter the<br><em>benchmark.</em></h2>
+          <div class="dataset-access-grid">
+            <article class="dataset-access-card primary"><span>Open repository</span><h3>Code, processed data and documentation.</h3><p>The official repository contains download links, data organisation, benchmark split and usage instructions.</p><div class="dataset-actions"><a class="button button-primary" href="https://github.com/YuanFangFF/SemanticUrban" target="_blank" rel="noreferrer">Open GitHub ↗</a></div></article>
+            <article class="dataset-access-card"><span>Raw acquisition</span><h3>Need the original scans?</h3><p>The public package is the 0.05 m voxel benchmark. Researchers can request raw data from the corresponding author.</p><div class="dataset-actions"><a class="button" href="mailto:Lei.Fan@xjtlu.edu.cn?subject=SemanticUrban%20raw%20data%20request">Email request ↗</a></div></article>
+          </div>
+        </div>
+      </section>
+    </div>
+    <section class="dataset-citation" id="cite" aria-labelledby="cite-title">
+      <div class="shell citation-layout">
+        <div><p class="dataset-section-label">07 · Citation</p><h2 class="dataset-heading" id="cite-title">Build on<br><em>this work.</em></h2></div>
+        <div class="citation-box"><button class="citation-copy" type="button" data-copy-citation>Copy BibTeX</button><pre><code>@article{FANG2026132949,
+  title   = {Towards Accurate Urban Scene Understanding using Point Clouds: The SemanticUrban Dataset},
+  author  = {Yuan Fang and Qinfeng Zhu and Yuanzhi Cai and Lei Fan},
+  journal = {Expert Systems with Applications},
+  pages   = {132949},
+  year    = {2026},
+  issn    = {0957-4174},
+  doi     = {10.1016/j.eswa.2026.132949}
+}</code></pre></div>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer shell dataset-footer">
+    <a class="template-origin" href="https://github.com/zhuqinfeng1999/interactive-academic-portfolio" target="_blank" rel="noreferrer" aria-label="View the Spatialfolio template on GitHub"><span class="template-origin-icon" aria-hidden="true"></span><span class="template-origin-copy"><span class="template-origin-kicker">Template provenance</span><strong>Built with Spatialfolio</strong><span class="template-origin-detail">Explore the academic portfolio template on GitHub</span></span><span class="template-origin-arrow" aria-hidden="true">↗</span></a>
+    <div class="footer-links"><a href="/">Portfolio ↗</a><a href="/projects/">Projects ↗</a><a href="https://github.com/YuanFangFF/SemanticUrban" target="_blank" rel="noreferrer">Dataset GitHub ↗</a><a href="mailto:zhuqinfeng1999@gmail.com">Contact ↗</a></div>
+    <div class="footer-meta"><span>© <span data-year>2026</span> Qinfeng Zhu</span><a href="#main">Back to top ↑</a></div>
+  </footer>
+  <dialog class="dataset-dialog" data-image-dialog><button class="dataset-dialog-close" type="button" data-dialog-close aria-label="Close image">×</button><img src="" alt=""></dialog>
+  <script src="/assets/js/cosmic.js?v=12" defer></script>
+  <script src="/assets/js/datasets.js?v=1" defer></script>
+</body>
+</html>
