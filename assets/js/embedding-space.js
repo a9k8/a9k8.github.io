@@ -33,6 +33,9 @@
     }
 
     const scene = new THREE.Scene();
+    // Fades distant points/lines toward the page's own background color, giving
+    // the scene real depth instead of everything reading at the same distance.
+    scene.fog = new THREE.Fog(0x1e1e1e, 10, 28);
 
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(0, 0, 14);
@@ -94,7 +97,7 @@
     // randomly across the whole scene, then settle into their cluster
     // positions over a couple seconds - representations starting unstructured
     // and training organizing them, without needing any text to explain it.
-    const INTRO_DURATION = 3000; // ms
+    const INTRO_DURATION = 2600; // ms
     const introStartArray = new Float32Array(positionArray.length);
     const SCATTER_EXTENT = new THREE.Vector3(9, 6.5, 5.5);
     for (let i = 0; i < pointCount; i++) {
@@ -103,9 +106,9 @@
         introStartArray[i * 3 + 2] = (Math.random() * 2 - 1) * SCATTER_EXTENT.z;
     }
     // The geometry displays this array, which starts equal to the scatter and
-    // is animated toward positionArray - positionArray itself is never mutated,
-    // since spawnLink/updateSweep treat it as ground truth regardless of what's
-    // currently on screen mid-intro.
+    // is animated toward positionArray during the intro, then continuously
+    // driven by breathing/repel afterward. positionArray itself is never
+    // mutated - it's the fixed "resting" reference every other system reads.
     const displayPositionArray = introStartArray.slice();
 
     const geometry = new THREE.BufferGeometry();
@@ -153,6 +156,93 @@
         return t < 1;
     }
 
+    // Ambient "breathing": each cluster's overall spread very slowly expands
+    // and contracts, independent of the intro/links/repel systems, so resting
+    // clusters still feel alive when nothing else is currently firing nearby.
+    // Runs only once the intro settle-in is done - it writes displayPositionArray
+    // every frame, same as updateIntro, so the two must never run in the same frame.
+    const BREATH_SPEED = 0.00022;
+    const BREATH_AMPLITUDE = 0.05; // +/-5% of each point's distance from its cluster center
+    const clusterBreathPhase = CLUSTERS.map(() => Math.random() * Math.PI * 2);
+
+    function updateBreathing(now) {
+        CLUSTERS.forEach((cluster, ci) => {
+            const [start, end] = clusterIndexRanges[ci];
+            const scale = 1 + Math.sin(now * BREATH_SPEED + clusterBreathPhase[ci]) * BREATH_AMPLITUDE;
+            for (let idx = start; idx < end; idx++) {
+                const bi = idx * 3;
+                displayPositionArray[bi] = cluster.center.x + (positionArray[bi] - cluster.center.x) * scale;
+                displayPositionArray[bi + 1] = cluster.center.y + (positionArray[bi + 1] - cluster.center.y) * scale;
+                displayPositionArray[bi + 2] = cluster.center.z + (positionArray[bi + 2] - cluster.center.z) * scale;
+            }
+        });
+    }
+
+    // Contrastive push/pull: the links elsewhere only show attraction (a
+    // point pulled toward the joint embedding). This is the missing other
+    // half of contrastive learning - occasionally two points from different
+    // clusters visibly drift apart and back, like a negative pair being
+    // pushed away from an anchor, before settling back into the resting
+    // (breathing) layout. Applied on top of updateBreathing's result each frame.
+    const activeRepels = [];
+    const REPEL_DISTANCE = 1.0;
+    const REPEL_INTERVAL_MIN = 3500;
+    const REPEL_INTERVAL_MAX = 7000;
+
+    function spawnRepel() {
+        const clusterA = Math.floor(Math.random() * JOINT_CLUSTER_INDEX);
+        let clusterB = Math.floor(Math.random() * JOINT_CLUSTER_INDEX);
+        if (clusterB === clusterA) clusterB = (clusterB + 1) % JOINT_CLUSTER_INDEX;
+
+        const indexA = randomIndexInCluster(clusterA);
+        const indexB = randomIndexInCluster(clusterB);
+        const ai = indexA * 3, bi = indexB * 3;
+
+        const dx = positionArray[ai] - positionArray[bi];
+        const dy = positionArray[ai + 1] - positionArray[bi + 1];
+        const dz = positionArray[ai + 2] - positionArray[bi + 2];
+        const len = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+
+        activeRepels.push({
+            indexA,
+            indexB,
+            dir: { x: dx / len, y: dy / len, z: dz / len },
+            startTime: performance.now(),
+            duration: 1800
+        });
+
+        pulsePoint(indexA, 1);
+        pulsePoint(indexB, 1);
+    }
+
+    function scheduleNextRepel() {
+        const delay = REPEL_INTERVAL_MIN + Math.random() * (REPEL_INTERVAL_MAX - REPEL_INTERVAL_MIN);
+        setTimeout(() => {
+            spawnRepel();
+            scheduleNextRepel();
+        }, delay);
+    }
+    setTimeout(scheduleNextRepel, INTRO_DURATION + 1200);
+
+    function updateRepels(now) {
+        for (let i = activeRepels.length - 1; i >= 0; i--) {
+            const r = activeRepels[i];
+            const t = (now - r.startTime) / r.duration;
+            if (t >= 1) {
+                activeRepels.splice(i, 1);
+                continue;
+            }
+            const push = Math.sin(Math.PI * t) * REPEL_DISTANCE; // grows then eases back to 0
+            const ai = r.indexA * 3, bi = r.indexB * 3;
+            displayPositionArray[ai] += r.dir.x * push;
+            displayPositionArray[ai + 1] += r.dir.y * push;
+            displayPositionArray[ai + 2] += r.dir.z * push;
+            displayPositionArray[bi] -= r.dir.x * push;
+            displayPositionArray[bi + 1] -= r.dir.y * push;
+            displayPositionArray[bi + 2] -= r.dir.z * push;
+        }
+    }
+
     // Pulsing links: a handful of faint curved lines from a random point in an
     // outer (modality) cluster to a random point inside the shared "joint
     // embedding" cluster - visualizing cross-modal representations being pulled
@@ -170,7 +260,8 @@
     // each vertex's own color based on how close it is to the current travel
     // position, rather than a separate object traveling alongside the line.
     const LINE_SEGMENTS = 40;
-    const TRAIL_WIDTH = 0.22; // width of the glowing segment, in curve-parameter units (0..1)
+    const TAIL_LENGTH = 0.4; // how far behind the head the comet trail fades out (curve-parameter units)
+    const HEAD_SOFTNESS = 0.04; // crisp leading edge - nothing glows ahead of the head
     const BASE_BRIGHTNESS = 0.22; // dim resting brightness of the pathway itself
 
     function spawnLink() {
@@ -180,8 +271,8 @@
         const sourceIndex = randomIndexInCluster(sourceClusterIndex);
         const targetIndex = randomIndexInCluster(JOINT_CLUSTER_INDEX);
 
-        const p1 = new THREE.Vector3(positionArray[sourceIndex * 3], positionArray[sourceIndex * 3 + 1], positionArray[sourceIndex * 3 + 2]);
-        const p2 = new THREE.Vector3(positionArray[targetIndex * 3], positionArray[targetIndex * 3 + 1], positionArray[targetIndex * 3 + 2]);
+        const p1 = new THREE.Vector3(displayPositionArray[sourceIndex * 3], displayPositionArray[sourceIndex * 3 + 1], displayPositionArray[sourceIndex * 3 + 2]);
+        const p2 = new THREE.Vector3(displayPositionArray[targetIndex * 3], displayPositionArray[targetIndex * 3 + 1], displayPositionArray[targetIndex * 3 + 2]);
         const mid = p1.clone().add(p2).multiplyScalar(0.5);
         mid.x += (Math.random() - 0.5) * 1.5;
         mid.y += (Math.random() - 0.5) * 1.5;
@@ -264,9 +355,11 @@
                 const vt = v / (link.vertexCount - 1);
                 let boost = 0;
                 if (travelT < 1) {
-                    const dist = Math.abs(vt - travelT);
-                    boost = Math.max(0, 1 - dist / TRAIL_WIDTH);
-                    boost *= boost; // sharper falloff - a comet-like head, not a soft ramp
+                    const dist = vt - travelT; // signed - behind the head (<=0) vs ahead of it (>0)
+                    boost = dist <= 0
+                        ? Math.max(0, 1 + dist / TAIL_LENGTH) // fading tail behind
+                        : Math.max(0, 1 - dist / HEAD_SOFTNESS); // sharp cutoff ahead - nothing glows before the signal arrives
+                    boost *= boost;
                 }
                 // Base color at rest, but the head itself burns toward white at
                 // peak boost - a hot core reads far brighter under additive
@@ -358,12 +451,15 @@
     let lastPointerY = 0;
     let velocityX = 0;
     let dragEndTime = 0;
+    let dragDistance = 0; // cumulative movement during this press - below CLICK_THRESHOLD counts as a click, not a drag
+    const CLICK_THRESHOLD = 6;
 
     function pointerDown(x, y) {
         isDragging = true;
         lastPointerX = x;
         lastPointerY = y;
         velocityX = 0;
+        dragDistance = 0;
         document.body.classList.add('dragging-scene');
     }
 
@@ -376,6 +472,7 @@
         sceneGroup.rotation.x += deltaY * DRAG_SENSITIVITY;
 
         velocityX = deltaX * DRAG_SENSITIVITY;
+        dragDistance += Math.abs(deltaX) + Math.abs(deltaY);
         lastPointerX = x;
         lastPointerY = y;
     }
@@ -385,6 +482,12 @@
         isDragging = false;
         dragEndTime = performance.now();
         document.body.classList.remove('dragging-scene');
+
+        if (dragDistance < CLICK_THRESHOLD) {
+            raycaster.setFromCamera(pointerNDC, camera);
+            const hits = raycaster.intersectObject(points);
+            if (hits.length > 0) spawnNeighborReveal(hits[0].index);
+        }
     }
 
     // Listen on window (not the canvas) since the scene sits behind the page
@@ -419,6 +522,85 @@
         if (hoveredIndex !== -1) pulsePoint(hoveredIndex, 1);
     }
 
+    // Click a point to reveal its nearest neighbors by actual 3D distance -
+    // literally what an embedding space is used for (similarity retrieval),
+    // rather than just an ambient visual.
+    const K_NEIGHBORS = 5;
+    const activeReveals = [];
+
+    function clusterIndexOfPoint(index) {
+        for (let ci = 0; ci < clusterIndexRanges.length; ci++) {
+            const [start, end] = clusterIndexRanges[ci];
+            if (index >= start && index < end) return ci;
+        }
+        return 0;
+    }
+
+    function findNearestNeighbors(index, k) {
+        const ax = displayPositionArray[index * 3];
+        const ay = displayPositionArray[index * 3 + 1];
+        const az = displayPositionArray[index * 3 + 2];
+        const distances = [];
+        for (let i = 0; i < pointCount; i++) {
+            if (i === index) continue;
+            const dx = displayPositionArray[i * 3] - ax;
+            const dy = displayPositionArray[i * 3 + 1] - ay;
+            const dz = displayPositionArray[i * 3 + 2] - az;
+            distances.push([i, dx * dx + dy * dy + dz * dz]);
+        }
+        distances.sort((a, b) => a[1] - b[1]);
+        return distances.slice(0, k).map((d) => d[0]);
+    }
+
+    function spawnNeighborReveal(index) {
+        const color = CLUSTERS[clusterIndexOfPoint(index)].color;
+        const p1 = new THREE.Vector3(displayPositionArray[index * 3], displayPositionArray[index * 3 + 1], displayPositionArray[index * 3 + 2]);
+
+        findNearestNeighbors(index, K_NEIGHBORS).forEach((neighborIndex) => {
+            const p2 = new THREE.Vector3(
+                displayPositionArray[neighborIndex * 3],
+                displayPositionArray[neighborIndex * 3 + 1],
+                displayPositionArray[neighborIndex * 3 + 2]
+            );
+            const revealGeometry = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+            const revealMaterial = new THREE.LineBasicMaterial({
+                color,
+                transparent: true,
+                opacity: 0,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+            const line = new THREE.Line(revealGeometry, revealMaterial);
+            sceneGroup.add(line);
+
+            activeReveals.push({
+                line,
+                material: revealMaterial,
+                startTime: performance.now(),
+                lifetime: 2600
+            });
+
+            pulsePoint(neighborIndex, 1);
+        });
+
+        pulsePoint(index, 1);
+    }
+
+    function updateReveals(now) {
+        for (let i = activeReveals.length - 1; i >= 0; i--) {
+            const r = activeReveals[i];
+            const t = (now - r.startTime) / r.lifetime;
+            if (t >= 1) {
+                sceneGroup.remove(r.line);
+                r.line.geometry.dispose();
+                r.material.dispose();
+                activeReveals.splice(i, 1);
+                continue;
+            }
+            r.material.opacity = Math.sin(Math.PI * t) * 0.8;
+        }
+    }
+
     function animate() {
         requestAnimationFrame(animate);
         const now = performance.now();
@@ -432,10 +614,17 @@
             sceneGroup.rotation.y += AUTO_ROTATE_SPEED;
         }
 
-        if (introActive) introActive = updateIntro(now);
+        if (introActive) {
+            introActive = updateIntro(now);
+        } else {
+            updateBreathing(now);
+            updateRepels(now);
+            geometry.attributes.position.needsUpdate = true;
+        }
 
         updateHover();
         updateLinks(now);
+        updateReveals(now);
 
         // Decay active glow and write it into the color attribute, lerping each
         // affected point's color toward white and back to its base hue.
