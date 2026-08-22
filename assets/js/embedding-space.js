@@ -130,11 +130,15 @@
         return start + Math.floor(Math.random() * (end - start));
     }
 
-    // Each firing has two parts, like a synapse: a faint, near-instant pathway
-    // (the "axon") between the two points, and a bright spark that visibly
-    // travels along it over a fraction of a second - rather than the whole
-    // connection just flashing on and off, which read as a sudden pop instead
-    // of a signal actually being sent.
+    // Each firing draws a faint, near-instant pathway (the "axon") between the
+    // two points, then a bright glowing segment sweeps along that same line
+    // from source to target over a fraction of a second - done by brightening
+    // each vertex's own color based on how close it is to the current travel
+    // position, rather than a separate object traveling alongside the line.
+    const LINE_SEGMENTS = 40;
+    const TRAIL_WIDTH = 0.22; // width of the glowing segment, in curve-parameter units (0..1)
+    const BASE_BRIGHTNESS = 0.15; // dim resting brightness of the pathway itself
+
     function spawnLink() {
         if (activeLinks.length >= MAX_LINKS) return;
 
@@ -150,40 +154,41 @@
         mid.z += (Math.random() - 0.5) * 1.5;
 
         const curve = new THREE.QuadraticBezierCurve3(p1, mid, p2);
-        const lineGeometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(32));
+        const curvePoints = curve.getPoints(LINE_SEGMENTS);
+        const vertexCount = curvePoints.length;
+
+        const baseColor = new THREE.Color(CLUSTERS[sourceClusterIndex].color);
+        const colorArray = new Float32Array(vertexCount * 3);
+        for (let v = 0; v < vertexCount; v++) {
+            colorArray[v * 3] = baseColor.r * BASE_BRIGHTNESS;
+            colorArray[v * 3 + 1] = baseColor.g * BASE_BRIGHTNESS;
+            colorArray[v * 3 + 2] = baseColor.b * BASE_BRIGHTNESS;
+        }
+
+        const lineGeometry = new THREE.BufferGeometry().setFromPoints(curvePoints);
+        lineGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
         const lineMaterial = new THREE.LineBasicMaterial({
-            color: CLUSTERS[sourceClusterIndex].color,
+            vertexColors: true,
             transparent: true,
-            opacity: 0
+            opacity: 0,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
         });
         const line = new THREE.Line(lineGeometry, lineMaterial);
         sceneGroup.add(line);
 
-        const pulseMaterial = new THREE.SpriteMaterial({
-            map: glowTexture,
-            color: CLUSTERS[sourceClusterIndex].color,
-            transparent: true,
-            opacity: 0,
-            depthWrite: false,
-            blending: THREE.AdditiveBlending
-        });
-        const pulseSprite = new THREE.Sprite(pulseMaterial);
-        pulseSprite.scale.set(0.55, 0.55, 1);
-        pulseSprite.position.copy(p1);
-        sceneGroup.add(pulseSprite);
-
         activeLinks.push({
             line,
             material: lineMaterial,
-            pulseSprite,
-            pulseMaterial,
-            curve,
+            colorAttr: lineGeometry.attributes.color,
+            baseColor,
+            vertexCount,
             sourceIndex,
             targetIndex,
-            peakOpacity: 0.1 + Math.random() * 0.1, // dim, persistent pathway - not the main flash
+            peakOpacity: 0.7 + Math.random() * 0.3,
             startTime: performance.now(),
             lifetime: 2600 + Math.random() * 1400,
-            travelDuration: 550 + Math.random() * 400 // how long the spark takes to cross
+            travelDuration: 550 + Math.random() * 400 // how long the glow takes to sweep across
         });
 
         triggerParticleRipple(p1);
@@ -208,18 +213,33 @@
                 sceneGroup.remove(link.line);
                 link.line.geometry.dispose();
                 link.material.dispose();
-                sceneGroup.remove(link.pulseSprite);
-                link.pulseMaterial.dispose();
                 activeLinks.splice(i, 1);
                 continue;
             }
             link.material.opacity = Math.sin(Math.PI * t) * link.peakOpacity;
 
             const travelT = Math.min((now - link.startTime) / link.travelDuration, 1);
-            link.pulseSprite.position.copy(link.curve.getPoint(travelT));
-            link.pulseMaterial.opacity = travelT < 1 ? Math.sin(Math.PI * travelT) : 0;
 
-            // Source flashes as it "fires", target flashes as the signal arrives -
+            // Brighten each vertex based on how close it is (in curve-parameter
+            // space) to the current travel position - the glow itself sweeps
+            // along the line rather than a separate object moving over it.
+            const arr = link.colorAttr.array;
+            for (let v = 0; v < link.vertexCount; v++) {
+                const vt = v / (link.vertexCount - 1);
+                let boost = 0;
+                if (travelT < 1) {
+                    const dist = Math.abs(vt - travelT);
+                    boost = Math.max(0, 1 - dist / TRAIL_WIDTH);
+                    boost *= boost; // sharper falloff - a comet-like head, not a soft ramp
+                }
+                const brightness = BASE_BRIGHTNESS + (1 - BASE_BRIGHTNESS) * boost;
+                arr[v * 3] = link.baseColor.r * brightness;
+                arr[v * 3 + 1] = link.baseColor.g * brightness;
+                arr[v * 3 + 2] = link.baseColor.b * brightness;
+            }
+            link.colorAttr.needsUpdate = true;
+
+            // Source flashes as it "fires", target flashes as the glow arrives -
             // rather than both endpoints glowing for the whole link lifetime.
             if (travelT < 0.15) pulsePoint(link.sourceIndex, 1 - travelT / 0.15);
             if (travelT > 0.8) pulsePoint(link.targetIndex, (travelT - 0.8) / 0.2);
