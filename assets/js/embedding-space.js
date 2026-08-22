@@ -663,8 +663,7 @@
     // approaches/leaves - distinct from the single-point hover glow above.
     const clusterHoverIntensity = new Float32Array(CLUSTERS.length); // 0..1 per cluster, eased each frame
     const HOVER_CLUSTER_RADIUS_PX = 320;
-    const HOVER_GLOW_AMPLITUDE = 2.2; // up to ~3.2x brightness at full intensity
-    const HOVER_WHITE_MIX = 0.55; // additionally burns toward white at full intensity, for a genuine "glow" rather than just a color scale
+    const HOVER_GLOW_AMPLITUDE = 3.2; // up to ~4.2x brightness at full intensity - stays the cluster's own hue, no white mix
     const HOVER_EASE_SPEED = 0.12;
     const _tmpClusterScreenPos = new THREE.Vector3();
 
@@ -694,16 +693,12 @@
             }
 
             const mult = 1 + HOVER_GLOW_AMPLITUDE * clusterHoverIntensity[ci];
-            const whiteMix = clusterHoverIntensity[ci] * HOVER_WHITE_MIX;
             const [start, end] = clusterIndexRanges[ci];
             for (let idx = start; idx < end; idx++) {
                 const bi = idx * 3;
-                const r = baseColorArray[bi] * mult;
-                const g = baseColorArray[bi + 1] * mult;
-                const b = baseColorArray[bi + 2] * mult;
-                currentBaseArray[bi] = r + (1 - r) * whiteMix;
-                currentBaseArray[bi + 1] = g + (1 - g) * whiteMix;
-                currentBaseArray[bi + 2] = b + (1 - b) * whiteMix;
+                currentBaseArray[bi] = baseColorArray[bi] * mult;
+                currentBaseArray[bi + 1] = baseColorArray[bi + 1] * mult;
+                currentBaseArray[bi + 2] = baseColorArray[bi + 2] * mult;
                 if (activeGlow[idx] <= 0.001) {
                     colorAttr.array[bi] = currentBaseArray[bi];
                     colorAttr.array[bi + 1] = currentBaseArray[bi + 1];
