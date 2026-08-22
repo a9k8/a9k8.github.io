@@ -637,10 +637,18 @@
     const raycaster = new THREE.Raycaster();
     raycaster.params.Points.threshold = 0.25;
     const pointerNDC = new THREE.Vector2(-10, -10); // off-screen until first move
+    let mouseScreenX = -9999;
+    let mouseScreenY = -9999;
 
     window.addEventListener('mousemove', (e) => {
         pointerNDC.x = (e.clientX / window.innerWidth) * 2 - 1;
         pointerNDC.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        mouseScreenX = e.clientX;
+        mouseScreenY = e.clientY;
+    });
+    window.addEventListener('mouseleave', () => {
+        mouseScreenX = -9999;
+        mouseScreenY = -9999;
     });
 
     function updateHover() {
@@ -648,6 +656,56 @@
         const hits = raycaster.intersectObject(points);
         hoveredIndex = hits.length > 0 ? hits[0].index : -1;
         if (hoveredIndex !== -1) pulsePoint(hoveredIndex, 1);
+    }
+
+    // Whichever cluster's projected center is nearest the cursor (within
+    // range) glows as a whole, fading smoothly in/out as the cursor
+    // approaches/leaves - distinct from the single-point hover glow above.
+    const clusterHoverIntensity = new Float32Array(CLUSTERS.length); // 0..1 per cluster, eased each frame
+    const HOVER_CLUSTER_RADIUS_PX = 320;
+    const HOVER_GLOW_AMPLITUDE = 0.9; // up to ~1.9x brightness at full intensity
+    const HOVER_EASE_SPEED = 0.1;
+    const _tmpClusterScreenPos = new THREE.Vector3();
+
+    function updateClusterHover() {
+        let nearestIndex = -1;
+        let nearestDist = HOVER_CLUSTER_RADIUS_PX;
+
+        for (let ci = 0; ci < CLUSTERS.length; ci++) {
+            _tmpClusterScreenPos.copy(CLUSTERS[ci].center).applyMatrix4(sceneGroup.matrixWorld).project(camera);
+            const sx = (_tmpClusterScreenPos.x * 0.5 + 0.5) * window.innerWidth;
+            const sy = (1 - (_tmpClusterScreenPos.y * 0.5 + 0.5)) * window.innerHeight;
+            const dx = sx - mouseScreenX;
+            const dy = sy - mouseScreenY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < nearestDist) {
+                nearestDist = dist;
+                nearestIndex = ci;
+            }
+        }
+
+        for (let ci = 0; ci < CLUSTERS.length; ci++) {
+            const target = ci === nearestIndex ? 1 : 0;
+            clusterHoverIntensity[ci] += (target - clusterHoverIntensity[ci]) * HOVER_EASE_SPEED;
+            if (clusterHoverIntensity[ci] < 0.001 && target === 0) {
+                clusterHoverIntensity[ci] = 0;
+                continue; // already fully faded out - nothing to write
+            }
+
+            const mult = 1 + HOVER_GLOW_AMPLITUDE * clusterHoverIntensity[ci];
+            const [start, end] = clusterIndexRanges[ci];
+            for (let idx = start; idx < end; idx++) {
+                const bi = idx * 3;
+                currentBaseArray[bi] = baseColorArray[bi] * mult;
+                currentBaseArray[bi + 1] = baseColorArray[bi + 1] * mult;
+                currentBaseArray[bi + 2] = baseColorArray[bi + 2] * mult;
+                if (activeGlow[idx] <= 0.001) {
+                    colorAttr.array[bi] = currentBaseArray[bi];
+                    colorAttr.array[bi + 1] = currentBaseArray[bi + 1];
+                    colorAttr.array[bi + 2] = currentBaseArray[bi + 2];
+                }
+            }
+        }
     }
 
     // Click a point to reveal its nearest neighbors by actual 3D distance -
@@ -765,6 +823,7 @@
         }
 
         updateHover();
+        updateClusterHover();
         updateLinks(now);
         updateReveals(now);
         updateBreaths(now);
