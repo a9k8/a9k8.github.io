@@ -316,7 +316,6 @@
     const AUTO_ROTATE_SPEED = 0.0012;
     const DRAG_SENSITIVITY = 0.005;
     const VELOCITY_DAMPING = 0.94;
-    const MAX_TILT = Math.PI / 2 - 0.05;
 
     let isDragging = false;
     let lastPointerX = 0;
@@ -338,10 +337,7 @@
         const deltaY = y - lastPointerY;
 
         sceneGroup.rotation.y += deltaX * DRAG_SENSITIVITY;
-        sceneGroup.rotation.x = Math.max(
-            -MAX_TILT,
-            Math.min(MAX_TILT, sceneGroup.rotation.x + deltaY * DRAG_SENSITIVITY)
-        );
+        sceneGroup.rotation.x += deltaY * DRAG_SENSITIVITY;
 
         velocityX = deltaX * DRAG_SENSITIVITY;
         lastPointerX = x;
