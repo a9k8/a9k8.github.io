@@ -97,7 +97,7 @@
     // randomly across the whole scene, then settle into their cluster
     // positions over a couple seconds - representations starting unstructured
     // and training organizing them, without needing any text to explain it.
-    const INTRO_DURATION = 2600; // ms
+    const INTRO_DURATION = 3000; // ms
     const introStartArray = new Float32Array(positionArray.length);
     const SCATTER_EXTENT = new THREE.Vector3(9, 6.5, 5.5);
     for (let i = 0; i < pointCount; i++) {
@@ -145,7 +145,7 @@
 
     function updateIntro(now) {
         const t = Math.min((now - introStartTime) / INTRO_DURATION, 1);
-        const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic - quick start, gentle settle at the end
+        const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; // ease-in-out cubic - gradual start and end, not an abrupt launch
         for (let i = 0; i < pointCount; i++) {
             const bi = i * 3;
             displayPositionArray[bi] = introStartArray[bi] + (positionArray[bi] - introStartArray[bi]) * eased;
