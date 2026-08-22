@@ -592,8 +592,8 @@
     // Also fires on its own, irregularly, so the retrieval demo is visible
     // even for a visitor who never clicks - a random point "queries" its
     // nearest neighbors periodically, same visual as the click-triggered one.
-    const REVEAL_INTERVAL_MIN = 5000;
-    const REVEAL_INTERVAL_MAX = 9000;
+    const REVEAL_INTERVAL_MIN = 2000;
+    const REVEAL_INTERVAL_MAX = 4000;
 
     function scheduleNextReveal() {
         const delay = REVEAL_INTERVAL_MIN + Math.random() * (REVEAL_INTERVAL_MAX - REVEAL_INTERVAL_MIN);
