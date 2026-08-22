@@ -131,6 +131,8 @@
     const points = new THREE.Points(geometry, material);
     sceneGroup.add(points);
 
+    const colorAttr = geometry.attributes.color; // shared by the glow lerp and the breathing effect below
+
     // Per-point "active glow" state: hovered/linked points briefly lerp toward
     // white and back, reusing the color attribute (no custom shader needed).
     const activeGlow = new Float32Array(pointCount); // 0..1 intensity, decays each frame
@@ -138,6 +140,71 @@
 
     function pulsePoint(index, intensity) {
         activeGlow[index] = Math.max(activeGlow[index], intensity);
+    }
+
+    // The glow lerp's "resting" color to lerp from/back to - normally just
+    // baseColorArray, but a breathing cluster (below) brightens/dims this so
+    // glow flashes still layer correctly on top of the current breath phase.
+    const currentBaseArray = baseColorArray.slice();
+
+    // Cluster-wide "breathing": every so often, a random cluster's points all
+    // brighten and dim together as one slow pulse, like the whole cluster is
+    // breathing - distinct from individual point glow (hover/links/repel),
+    // which still flashes independently on top of whatever the breath is doing.
+    const activeBreaths = []; // { clusterIndex, startTime, duration }
+    const BREATH_AMPLITUDE = 0.5; // brightness swings roughly 0.5x-1.5x of resting
+    const BREATH_DURATION_MIN = 3000;
+    const BREATH_DURATION_MAX = 4200;
+    const BREATH_INTERVAL_MIN = 3000;
+    const BREATH_INTERVAL_MAX = 6000;
+
+    function spawnBreath() {
+        const clusterIndex = Math.floor(Math.random() * CLUSTERS.length);
+        if (activeBreaths.some((b) => b.clusterIndex === clusterIndex)) return; // that cluster is already breathing
+        activeBreaths.push({
+            clusterIndex,
+            startTime: performance.now(),
+            duration: BREATH_DURATION_MIN + Math.random() * (BREATH_DURATION_MAX - BREATH_DURATION_MIN)
+        });
+    }
+
+    function scheduleNextBreath() {
+        const delay = BREATH_INTERVAL_MIN + Math.random() * (BREATH_INTERVAL_MAX - BREATH_INTERVAL_MIN);
+        setTimeout(() => {
+            spawnBreath();
+            scheduleNextBreath();
+        }, delay);
+    }
+    setTimeout(scheduleNextBreath, INTRO_DURATION + 700);
+
+    function updateBreaths(now) {
+        for (let i = activeBreaths.length - 1; i >= 0; i--) {
+            const b = activeBreaths[i];
+            const t = (now - b.startTime) / b.duration;
+            const [start, end] = clusterIndexRanges[b.clusterIndex];
+
+            // mult = 1 at both ends of the pulse, rises above 1 then dips below
+            // it in between - one full inhale/exhale cycle, not just a flash.
+            const mult = t >= 1 ? 1 : 1 + BREATH_AMPLITUDE * Math.sin(2 * Math.PI * t);
+
+            for (let idx = start; idx < end; idx++) {
+                const bi = idx * 3;
+                currentBaseArray[bi] = baseColorArray[bi] * mult;
+                currentBaseArray[bi + 1] = baseColorArray[bi + 1] * mult;
+                currentBaseArray[bi + 2] = baseColorArray[bi + 2] * mult;
+
+                // Points with no active glow right now aren't touched by the glow
+                // loop at all (it skips them), so the breath has to write the
+                // display color directly here for those.
+                if (activeGlow[idx] <= 0.001) {
+                    colorAttr.array[bi] = currentBaseArray[bi];
+                    colorAttr.array[bi + 1] = currentBaseArray[bi + 1];
+                    colorAttr.array[bi + 2] = currentBaseArray[bi + 2];
+                }
+            }
+
+            if (t >= 1) activeBreaths.splice(i, 1);
+        }
     }
 
     const introStartTime = performance.now();
@@ -700,23 +767,24 @@
         updateHover();
         updateLinks(now);
         updateReveals(now);
+        updateBreaths(now);
 
         // Decay active glow and write it into the color attribute, lerping each
-        // affected point's color toward white and back to its base hue.
-        const colorAttr = geometry.attributes.color;
+        // affected point's color toward white and back to its cluster's current
+        // (possibly breathing-adjusted) base color.
         for (let i = 0; i < activeGlow.length; i++) {
             if (activeGlow[i] <= 0.001) continue;
             const glow = activeGlow[i];
             const bi = i * 3;
-            colorAttr.array[bi] = baseColorArray[bi] + (1 - baseColorArray[bi]) * glow;
-            colorAttr.array[bi + 1] = baseColorArray[bi + 1] + (1 - baseColorArray[bi + 1]) * glow;
-            colorAttr.array[bi + 2] = baseColorArray[bi + 2] + (1 - baseColorArray[bi + 2]) * glow;
+            colorAttr.array[bi] = currentBaseArray[bi] + (1 - currentBaseArray[bi]) * glow;
+            colorAttr.array[bi + 1] = currentBaseArray[bi + 1] + (1 - currentBaseArray[bi + 1]) * glow;
+            colorAttr.array[bi + 2] = currentBaseArray[bi + 2] + (1 - currentBaseArray[bi + 2]) * glow;
             activeGlow[i] *= 0.9;
             if (activeGlow[i] <= 0.001) {
                 activeGlow[i] = 0;
-                colorAttr.array[bi] = baseColorArray[bi];
-                colorAttr.array[bi + 1] = baseColorArray[bi + 1];
-                colorAttr.array[bi + 2] = baseColorArray[bi + 2];
+                colorAttr.array[bi] = currentBaseArray[bi];
+                colorAttr.array[bi + 1] = currentBaseArray[bi + 1];
+                colorAttr.array[bi + 2] = currentBaseArray[bi + 2];
             }
         }
         colorAttr.needsUpdate = true;
