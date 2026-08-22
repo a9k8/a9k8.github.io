@@ -3,7 +3,7 @@
   title: "CAPE-JEPA: Cross-modal Adversarial Probabilistic Embedding JEPA"
   author: "Junghare Aniket and Banerjee Biplab"
   year: "2026"
-  additional_info: "British Machine Vision Conference 2026"
+  additional_info: "[British Machine Vision Conference 2026](https://bmvc2026.bmva.org/)"
   selected: true
 
 - key: aniketprl1
@@ -11,7 +11,7 @@
   title: "UA-JEPA: Uncertainty-Aware Joint-Embedding Predictive Learning for Remote Sensing Image Retrieval"
   author: "Junghare Aniket and Banerjee Biplab"
   year: "2026"
-  additional_info: "Pattern Recognition Letters"
+  additional_info: "[Pattern Recognition Letters](https://www.sciencedirect.com/journal/pattern-recognition-letters)"
   url: "https://www.sciencedirect.com/science/article/pii/S0167865526002825"
   primaryClass: cs.LG
   selected: true
