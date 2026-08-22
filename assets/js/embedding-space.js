@@ -152,11 +152,11 @@
     // breathing - distinct from individual point glow (hover/links/repel),
     // which still flashes independently on top of whatever the breath is doing.
     const activeBreaths = []; // { clusterIndex, startTime, duration }
-    const BREATH_AMPLITUDE = 0.5; // brightness swings roughly 0.5x-1.5x of resting
-    const BREATH_DURATION_MIN = 3000;
-    const BREATH_DURATION_MAX = 4200;
-    const BREATH_INTERVAL_MIN = 3000;
-    const BREATH_INTERVAL_MAX = 6000;
+    const BREATH_AMPLITUDE = 0.9; // brightness swings roughly 0.1x-1.9x of resting - needs to be dramatic to read at this point size
+    const BREATH_DURATION_MIN = 5000;
+    const BREATH_DURATION_MAX = 7000; // slow, deliberate inhale/exhale, not a quick flicker
+    const BREATH_INTERVAL_MIN = 2500;
+    const BREATH_INTERVAL_MAX = 5000;
 
     function spawnBreath() {
         const clusterIndex = Math.floor(Math.random() * CLUSTERS.length);
