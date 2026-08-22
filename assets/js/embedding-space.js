@@ -86,12 +86,30 @@
         clusterIndexRanges.push([start, pointCount]);
     });
 
-    const positionArray = new Float32Array(positions);
+    const positionArray = new Float32Array(positions); // final "trained" resting positions - links/sweep always target these
     const colorArray = new Float32Array(colors);
     const baseColorArray = colorArray.slice(); // untouched reference the "active glow" lerp resets back to
 
+    // One-time "training converges" intro: points start scattered almost
+    // randomly across the whole scene, then settle into their cluster
+    // positions over a couple seconds - representations starting unstructured
+    // and training organizing them, without needing any text to explain it.
+    const INTRO_DURATION = 2600; // ms
+    const introStartArray = new Float32Array(positionArray.length);
+    const SCATTER_EXTENT = new THREE.Vector3(9, 6.5, 5.5);
+    for (let i = 0; i < pointCount; i++) {
+        introStartArray[i * 3] = (Math.random() * 2 - 1) * SCATTER_EXTENT.x;
+        introStartArray[i * 3 + 1] = (Math.random() * 2 - 1) * SCATTER_EXTENT.y;
+        introStartArray[i * 3 + 2] = (Math.random() * 2 - 1) * SCATTER_EXTENT.z;
+    }
+    // The geometry displays this array, which starts equal to the scatter and
+    // is animated toward positionArray - positionArray itself is never mutated,
+    // since spawnLink/updateSweep treat it as ground truth regardless of what's
+    // currently on screen mid-intro.
+    const displayPositionArray = introStartArray.slice();
+
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positionArray, 3));
+    geometry.setAttribute('position', new THREE.BufferAttribute(displayPositionArray, 3));
     geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
 
     const glowTexture = makeGlowTexture(); // shared by the point cloud and the traveling signal sprites
@@ -117,6 +135,22 @@
 
     function pulsePoint(index, intensity) {
         activeGlow[index] = Math.max(activeGlow[index], intensity);
+    }
+
+    const introStartTime = performance.now();
+    let introActive = true;
+
+    function updateIntro(now) {
+        const t = Math.min((now - introStartTime) / INTRO_DURATION, 1);
+        const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic - quick start, gentle settle at the end
+        for (let i = 0; i < pointCount; i++) {
+            const bi = i * 3;
+            displayPositionArray[bi] = introStartArray[bi] + (positionArray[bi] - introStartArray[bi]) * eased;
+            displayPositionArray[bi + 1] = introStartArray[bi + 1] + (positionArray[bi + 1] - introStartArray[bi + 1]) * eased;
+            displayPositionArray[bi + 2] = introStartArray[bi + 2] + (positionArray[bi + 2] - introStartArray[bi + 2]) * eased;
+        }
+        geometry.attributes.position.needsUpdate = true;
+        return t < 1;
     }
 
     // Pulsing links: a handful of faint curved lines from a random point in an
@@ -203,7 +237,9 @@
             scheduleNextLink();
         }, delay);
     }
-    scheduleNextLink();
+    // Wait for the intro settle-in to finish before the first connection fires,
+    // so a link never appears to connect to a point that's still mid-flight.
+    setTimeout(scheduleNextLink, INTRO_DURATION + 400);
 
     function updateLinks(now) {
         for (let i = activeLinks.length - 1; i >= 0; i--) {
@@ -395,6 +431,8 @@
         } else if (now - dragEndTime > 600) {
             sceneGroup.rotation.y += AUTO_ROTATE_SPEED;
         }
+
+        if (introActive) introActive = updateIntro(now);
 
         updateHover();
         updateLinks(now);
