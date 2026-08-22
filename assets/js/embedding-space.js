@@ -137,7 +137,7 @@
     // position, rather than a separate object traveling alongside the line.
     const LINE_SEGMENTS = 40;
     const TRAIL_WIDTH = 0.22; // width of the glowing segment, in curve-parameter units (0..1)
-    const BASE_BRIGHTNESS = 0.15; // dim resting brightness of the pathway itself
+    const BASE_BRIGHTNESS = 0.22; // dim resting brightness of the pathway itself
 
     function spawnLink() {
         if (activeLinks.length >= MAX_LINKS) return;
@@ -185,7 +185,7 @@
             vertexCount,
             sourceIndex,
             targetIndex,
-            peakOpacity: 0.7 + Math.random() * 0.3,
+            peakOpacity: 0.9 + Math.random() * 0.1,
             startTime: performance.now(),
             lifetime: 2600 + Math.random() * 1400,
             travelDuration: 550 + Math.random() * 400 // how long the glow takes to sweep across
@@ -232,10 +232,13 @@
                     boost = Math.max(0, 1 - dist / TRAIL_WIDTH);
                     boost *= boost; // sharper falloff - a comet-like head, not a soft ramp
                 }
-                const brightness = BASE_BRIGHTNESS + (1 - BASE_BRIGHTNESS) * boost;
-                arr[v * 3] = link.baseColor.r * brightness;
-                arr[v * 3 + 1] = link.baseColor.g * brightness;
-                arr[v * 3 + 2] = link.baseColor.b * brightness;
+                // Base color at rest, but the head itself burns toward white at
+                // peak boost - a hot core reads far brighter under additive
+                // blending than just reaching full saturation of the hue.
+                const dim = BASE_BRIGHTNESS;
+                arr[v * 3] = link.baseColor.r * dim + (1 - link.baseColor.r * dim) * boost;
+                arr[v * 3 + 1] = link.baseColor.g * dim + (1 - link.baseColor.g * dim) * boost;
+                arr[v * 3 + 2] = link.baseColor.b * dim + (1 - link.baseColor.b * dim) * boost;
             }
             link.colorAttr.needsUpdate = true;
 
