@@ -9,13 +9,13 @@
     if (!container || typeof THREE === 'undefined') return;
 
     const CLUSTERS = [
-        { name: 'SAR embeddings', color: 0x4ec9b0, center: new THREE.Vector3(-5.5, 1.6, -1.5), spread: 2.8, count: 450 },
-        { name: 'Optical embeddings', color: 0xf0a94e, center: new THREE.Vector3(5.5, 1.9, -1), spread: 2.8, count: 450 },
-        { name: 'Hyperspectral embeddings', color: 0xff6b9d, center: new THREE.Vector3(0, -3.4, 2.2), spread: 2.5, count: 400 },
-        { name: 'LiDAR / elevation embeddings', color: 0x6bcf7f, center: new THREE.Vector3(-5.8, -2.5, 2.0), spread: 2.5, count: 370 },
-        { name: 'Temporal embeddings', color: 0x3498db, center: new THREE.Vector3(5.8, -2.3, 1.8), spread: 2.5, count: 370 },
-        { name: 'Text embeddings', color: 0x9b59b6, center: new THREE.Vector3(0, 4.0, -2.0), spread: 2.4, count: 340 },
-        { name: 'Joint embedding space', color: 0xffffff, center: new THREE.Vector3(0, 0.6, 0), spread: 1.6, count: 300 }
+        { name: 'SAR embeddings', color: 0x4ec9b0, center: new THREE.Vector3(-5.5, 1.6, -1.5), spread: 2.1, count: 450 },
+        { name: 'Optical embeddings', color: 0xf0a94e, center: new THREE.Vector3(5.5, 1.9, -1), spread: 2.1, count: 450 },
+        { name: 'Hyperspectral embeddings', color: 0xff6b9d, center: new THREE.Vector3(0, -3.4, 2.2), spread: 1.9, count: 400 },
+        { name: 'LiDAR / elevation embeddings', color: 0x6bcf7f, center: new THREE.Vector3(-5.8, -2.5, 2.0), spread: 1.9, count: 370 },
+        { name: 'Temporal embeddings', color: 0x3498db, center: new THREE.Vector3(5.8, -2.3, 1.8), spread: 1.9, count: 370 },
+        { name: 'Text embeddings', color: 0x9b59b6, center: new THREE.Vector3(0, 4.0, -2.0), spread: 1.8, count: 340 },
+        { name: 'Joint embedding space', color: 0xffffff, center: new THREE.Vector3(0, 0.6, 0), spread: 1.2, count: 300 }
     ];
     const JOINT_CLUSTER_INDEX = CLUSTERS.length - 1;
 
