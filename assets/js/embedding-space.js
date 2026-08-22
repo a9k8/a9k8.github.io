@@ -20,8 +20,8 @@
     const JOINT_CLUSTER_INDEX = CLUSTERS.length - 1;
 
     const POINT_SIZE = 0.16;
-    const MAX_LINKS = 30;
-    const LINK_SPAWN_INTERVAL = 260; // ms
+    const MAX_LINKS = 90;
+    const LINK_SPAWN_INTERVAL = 550; // ms
 
     // Box-Muller transform - gives clusters a denser core / tapering edge instead
     // of a uniform cube, so they read as organic "distributions" not blocks.
