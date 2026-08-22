@@ -12,13 +12,16 @@
         { name: 'SAR embeddings', color: 0x4ec9b0, center: new THREE.Vector3(-5.5, 1.6, -1.5), spread: 2.1, count: 320 },
         { name: 'Optical embeddings', color: 0xf0a94e, center: new THREE.Vector3(5.5, 1.9, -1), spread: 2.1, count: 320 },
         { name: 'Hyperspectral embeddings', color: 0xff6b9d, center: new THREE.Vector3(0, -3.4, 2.2), spread: 1.9, count: 280 },
-        { name: 'Joint embedding space', color: 0xffffff, center: new THREE.Vector3(0, 0.6, 0), spread: 1.1, count: 180 }
+        { name: 'LiDAR / elevation embeddings', color: 0x6bcf7f, center: new THREE.Vector3(-5.8, -2.5, 2.0), spread: 1.9, count: 260 },
+        { name: 'Temporal embeddings', color: 0x3498db, center: new THREE.Vector3(5.8, -2.3, 1.8), spread: 1.9, count: 260 },
+        { name: 'Text embeddings', color: 0x9b59b6, center: new THREE.Vector3(0, 4.0, -2.0), spread: 1.8, count: 240 },
+        { name: 'Joint embedding space', color: 0xffffff, center: new THREE.Vector3(0, 0.6, 0), spread: 1.2, count: 220 }
     ];
     const JOINT_CLUSTER_INDEX = CLUSTERS.length - 1;
 
     const POINT_SIZE = 0.16;
-    const MAX_LINKS = 9;
-    const LINK_SPAWN_INTERVAL = 700; // ms
+    const MAX_LINKS = 16;
+    const LINK_SPAWN_INTERVAL = 550; // ms
 
     // Box-Muller transform - gives clusters a denser core / tapering edge instead
     // of a uniform cube, so they read as organic "distributions" not blocks.
