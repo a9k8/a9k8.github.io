@@ -163,11 +163,13 @@
     // breathing - distinct from individual point glow (hover/links/repel),
     // which still flashes independently on top of whatever the breath is doing.
     const activeBreaths = []; // { clusterIndex, startTime, duration }
-    const BREATH_AMPLITUDE = 0.9; // brightness swings roughly 0.1x-1.9x of resting - needs to be dramatic to read at this point size
+    const BREATH_LIGHTNESS_AMPLITUDE = 0.42; // HSL lightness swings this far above/below resting - hue-preserving, unlike a raw RGB multiply
+    const BREATH_SATURATION_AMPLITUDE = 0.3; // extra vividness on the bright half of the cycle only
     const BREATH_DURATION_MIN = 5000;
     const BREATH_DURATION_MAX = 7000; // slow, deliberate inhale/exhale, not a quick flicker
     const BREATH_INTERVAL_MIN = 2500;
     const BREATH_INTERVAL_MAX = 5000;
+    const _tmpBreathColor = new THREE.Color();
 
     function spawnBreath() {
         const clusterIndex = Math.floor(Math.random() * CLUSTERS.length);
@@ -194,15 +196,19 @@
             const t = (now - b.startTime) / b.duration;
             const [start, end] = clusterIndexRanges[b.clusterIndex];
 
-            // mult = 1 at both ends of the pulse, rises above 1 then dips below
-            // it in between - one full inhale/exhale cycle, not just a flash.
-            const mult = t >= 1 ? 1 : 1 + BREATH_AMPLITUDE * Math.sin(2 * Math.PI * t);
+            // phase = 0 at both ends of the pulse, +1 at the inhale peak,
+            // -1 at the exhale trough - one full cycle, not just a flash.
+            const phase = t >= 1 ? 0 : Math.sin(2 * Math.PI * t);
+            const hsl = clusterBaseHSL[b.clusterIndex];
+            const boostedL = Math.min(0.92, Math.max(0.05, hsl.l + BREATH_LIGHTNESS_AMPLITUDE * phase));
+            const boostedS = Math.min(1, hsl.s + BREATH_SATURATION_AMPLITUDE * Math.max(0, phase));
+            _tmpBreathColor.setHSL(hsl.h, boostedS, boostedL);
 
             for (let idx = start; idx < end; idx++) {
                 const bi = idx * 3;
-                currentBaseArray[bi] = baseColorArray[bi] * mult;
-                currentBaseArray[bi + 1] = baseColorArray[bi + 1] * mult;
-                currentBaseArray[bi + 2] = baseColorArray[bi + 2] * mult;
+                currentBaseArray[bi] = _tmpBreathColor.r;
+                currentBaseArray[bi + 1] = _tmpBreathColor.g;
+                currentBaseArray[bi + 2] = _tmpBreathColor.b;
 
                 // Points with no active glow right now aren't touched by the glow
                 // loop at all (it skips them), so the breath has to write the
@@ -648,18 +654,10 @@
     const raycaster = new THREE.Raycaster();
     raycaster.params.Points.threshold = 0.25;
     const pointerNDC = new THREE.Vector2(-10, -10); // off-screen until first move
-    let mouseScreenX = -9999;
-    let mouseScreenY = -9999;
 
     window.addEventListener('mousemove', (e) => {
         pointerNDC.x = (e.clientX / window.innerWidth) * 2 - 1;
         pointerNDC.y = -(e.clientY / window.innerHeight) * 2 + 1;
-        mouseScreenX = e.clientX;
-        mouseScreenY = e.clientY;
-    });
-    window.addEventListener('mouseleave', () => {
-        mouseScreenX = -9999;
-        mouseScreenY = -9999;
     });
 
     function updateHover() {
@@ -667,62 +665,6 @@
         const hits = raycaster.intersectObject(points);
         hoveredIndex = hits.length > 0 ? hits[0].index : -1;
         if (hoveredIndex !== -1) pulsePoint(hoveredIndex, 1);
-    }
-
-    // Whichever cluster's projected center is nearest the cursor (within
-    // range) glows as a whole, fading smoothly in/out as the cursor
-    // approaches/leaves - distinct from the single-point hover glow above.
-    const clusterHoverIntensity = new Float32Array(CLUSTERS.length); // 0..1 per cluster, eased each frame
-    const HOVER_CLUSTER_RADIUS_PX = 320;
-    const HOVER_LIGHTNESS_BOOST = 0.4; // added to HSL lightness at full intensity - stays capped well short of white
-    const HOVER_SATURATION_BOOST = 0.25; // a bit more vivid too, not just lighter
-    const HOVER_EASE_SPEED = 0.12;
-    const _tmpClusterScreenPos = new THREE.Vector3();
-    const _tmpHoverColor = new THREE.Color();
-
-    function updateClusterHover() {
-        let nearestIndex = -1;
-        let nearestDist = HOVER_CLUSTER_RADIUS_PX;
-
-        for (let ci = 0; ci < CLUSTERS.length; ci++) {
-            _tmpClusterScreenPos.copy(CLUSTERS[ci].center).applyMatrix4(sceneGroup.matrixWorld).project(camera);
-            const sx = (_tmpClusterScreenPos.x * 0.5 + 0.5) * window.innerWidth;
-            const sy = (1 - (_tmpClusterScreenPos.y * 0.5 + 0.5)) * window.innerHeight;
-            const dx = sx - mouseScreenX;
-            const dy = sy - mouseScreenY;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < nearestDist) {
-                nearestDist = dist;
-                nearestIndex = ci;
-            }
-        }
-
-        for (let ci = 0; ci < CLUSTERS.length; ci++) {
-            const target = ci === nearestIndex ? 1 : 0;
-            clusterHoverIntensity[ci] += (target - clusterHoverIntensity[ci]) * HOVER_EASE_SPEED;
-            if (clusterHoverIntensity[ci] < 0.001 && target === 0) {
-                clusterHoverIntensity[ci] = 0;
-                continue; // already fully faded out - nothing to write
-            }
-
-            const hsl = clusterBaseHSL[ci];
-            const boostedL = Math.min(0.92, hsl.l + HOVER_LIGHTNESS_BOOST * clusterHoverIntensity[ci]);
-            const boostedS = Math.min(1, hsl.s + HOVER_SATURATION_BOOST * clusterHoverIntensity[ci]);
-            _tmpHoverColor.setHSL(hsl.h, boostedS, boostedL);
-
-            const [start, end] = clusterIndexRanges[ci];
-            for (let idx = start; idx < end; idx++) {
-                const bi = idx * 3;
-                currentBaseArray[bi] = _tmpHoverColor.r;
-                currentBaseArray[bi + 1] = _tmpHoverColor.g;
-                currentBaseArray[bi + 2] = _tmpHoverColor.b;
-                if (activeGlow[idx] <= 0.001) {
-                    colorAttr.array[bi] = currentBaseArray[bi];
-                    colorAttr.array[bi + 1] = currentBaseArray[bi + 1];
-                    colorAttr.array[bi + 2] = currentBaseArray[bi + 2];
-                }
-            }
-        }
     }
 
     // Click a point to reveal its nearest neighbors by actual 3D distance -
@@ -840,7 +782,6 @@
         }
 
         updateHover();
-        updateClusterHover();
         updateLinks(now);
         updateReveals(now);
         updateBreaths(now);
