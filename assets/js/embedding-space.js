@@ -94,9 +94,11 @@
     geometry.setAttribute('position', new THREE.BufferAttribute(positionArray, 3));
     geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
 
+    const glowTexture = makeGlowTexture(); // shared by the point cloud and the traveling signal sprites
+
     const material = new THREE.PointsMaterial({
         size: POINT_SIZE,
-        map: makeGlowTexture(),
+        map: glowTexture,
         vertexColors: true,
         transparent: true,
         opacity: 0.9,
@@ -128,6 +130,11 @@
         return start + Math.floor(Math.random() * (end - start));
     }
 
+    // Each firing has two parts, like a synapse: a faint, near-instant pathway
+    // (the "axon") between the two points, and a bright spark that visibly
+    // travels along it over a fraction of a second - rather than the whole
+    // connection just flashing on and off, which read as a sudden pop instead
+    // of a signal actually being sent.
     function spawnLink() {
         if (activeLinks.length >= MAX_LINKS) return;
 
@@ -152,19 +159,46 @@
         const line = new THREE.Line(lineGeometry, lineMaterial);
         sceneGroup.add(line);
 
+        const pulseMaterial = new THREE.SpriteMaterial({
+            map: glowTexture,
+            color: CLUSTERS[sourceClusterIndex].color,
+            transparent: true,
+            opacity: 0,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending
+        });
+        const pulseSprite = new THREE.Sprite(pulseMaterial);
+        pulseSprite.scale.set(0.55, 0.55, 1);
+        pulseSprite.position.copy(p1);
+        sceneGroup.add(pulseSprite);
+
         activeLinks.push({
             line,
             material: lineMaterial,
+            pulseSprite,
+            pulseMaterial,
+            curve,
             sourceIndex,
             targetIndex,
-            peakOpacity: 0.35 + Math.random() * 0.35,
+            peakOpacity: 0.1 + Math.random() * 0.1, // dim, persistent pathway - not the main flash
             startTime: performance.now(),
-            lifetime: 2600 + Math.random() * 1400
+            lifetime: 2600 + Math.random() * 1400,
+            travelDuration: 550 + Math.random() * 400 // how long the spark takes to cross
         });
 
         triggerParticleRipple(p1);
     }
-    setInterval(spawnLink, LINK_SPAWN_INTERVAL);
+
+    // Irregular firing interval (not a fixed metronome tick) so connections
+    // spawn like asynchronous neural activity rather than a mechanical pulse.
+    function scheduleNextLink() {
+        const delay = LINK_SPAWN_INTERVAL * (0.3 + Math.random() * 1.6);
+        setTimeout(() => {
+            spawnLink();
+            scheduleNextLink();
+        }, delay);
+    }
+    scheduleNextLink();
 
     function updateLinks(now) {
         for (let i = activeLinks.length - 1; i >= 0; i--) {
@@ -174,13 +208,21 @@
                 sceneGroup.remove(link.line);
                 link.line.geometry.dispose();
                 link.material.dispose();
+                sceneGroup.remove(link.pulseSprite);
+                link.pulseMaterial.dispose();
                 activeLinks.splice(i, 1);
                 continue;
             }
-            const intensity = Math.sin(Math.PI * t);
-            link.material.opacity = intensity * link.peakOpacity;
-            pulsePoint(link.sourceIndex, intensity);
-            pulsePoint(link.targetIndex, intensity);
+            link.material.opacity = Math.sin(Math.PI * t) * link.peakOpacity;
+
+            const travelT = Math.min((now - link.startTime) / link.travelDuration, 1);
+            link.pulseSprite.position.copy(link.curve.getPoint(travelT));
+            link.pulseMaterial.opacity = travelT < 1 ? Math.sin(Math.PI * travelT) : 0;
+
+            // Source flashes as it "fires", target flashes as the signal arrives -
+            // rather than both endpoints glowing for the whole link lifetime.
+            if (travelT < 0.15) pulsePoint(link.sourceIndex, 1 - travelT / 0.15);
+            if (travelT > 0.8) pulsePoint(link.targetIndex, (travelT - 0.8) / 0.2);
         }
     }
 
