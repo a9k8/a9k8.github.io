@@ -20,7 +20,7 @@
     const JOINT_CLUSTER_INDEX = CLUSTERS.length - 1;
 
     const POINT_SIZE = 0.16;
-    const MAX_LINKS = 450;
+    const MAX_LINKS = 90;
     const LINK_SPAWN_INTERVAL = 550; // ms
 
     // Box-Muller transform - gives clusters a denser core / tapering edge instead
@@ -249,6 +249,80 @@
         }
     }
 
+    // Occasional "convolution kernel" sweep: a small wireframe box raster-scans
+    // across one modality cluster at a time, brightening whichever points it
+    // passes over. This is the one deliberately literal ML reference in the
+    // scene - a visitor who's seen a CNN diagram will recognize the sliding
+    // window instantly, which text alone can't do. Rare (one cluster every
+    // ~20s) so it stays an accent, not the main animation.
+    const SWEEP_ROWS = 3;
+    const SWEEP_DURATION = 4200; // ms to complete one cluster's raster scan
+    const SWEEP_GAP = 16000; // ms of quiet before the next cluster's turn
+    const KERNEL_BOX_SIZE = 0.9;
+    const KERNEL_HIT_RADIUS = 0.75;
+
+    const kernelGeometry = new THREE.EdgesGeometry(new THREE.BoxGeometry(KERNEL_BOX_SIZE, KERNEL_BOX_SIZE, KERNEL_BOX_SIZE));
+    const kernelMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
+    const kernelMesh = new THREE.LineSegments(kernelGeometry, kernelMaterial);
+    sceneGroup.add(kernelMesh);
+
+    let currentSweep = null; // { clusterIndex, startTime }
+    let nextSweepCluster = 0;
+
+    function startNextSweep() {
+        const clusterIndex = nextSweepCluster % JOINT_CLUSTER_INDEX; // cycle the 6 modality clusters, skip the joint one
+        nextSweepCluster++;
+        currentSweep = { clusterIndex, startTime: performance.now() };
+        kernelMaterial.color.setHex(CLUSTERS[clusterIndex].color);
+    }
+
+    function scheduleSweeps() {
+        setTimeout(() => {
+            startNextSweep();
+            scheduleSweeps();
+        }, SWEEP_DURATION + SWEEP_GAP);
+    }
+    setTimeout(scheduleSweeps, 5000); // let the scene settle before the first sweep
+
+    function updateSweep(now) {
+        if (!currentSweep) {
+            kernelMaterial.opacity = 0;
+            return;
+        }
+        const { clusterIndex, startTime } = currentSweep;
+        const t = (now - startTime) / SWEEP_DURATION;
+        if (t >= 1) {
+            currentSweep = null;
+            kernelMaterial.opacity = 0;
+            return;
+        }
+
+        const cluster = CLUSTERS[clusterIndex];
+        const rowT = t * SWEEP_ROWS;
+        const row = Math.min(SWEEP_ROWS - 1, Math.floor(rowT));
+        let colT = rowT - row;
+        if (row % 2 === 1) colT = 1 - colT; // boustrophedon - alternate direction each row, like a real raster scan
+
+        const x = cluster.center.x + (colT * 2 - 1) * cluster.spread * 2.2;
+        const yLevels = [cluster.center.y - cluster.spread, cluster.center.y, cluster.center.y + cluster.spread];
+        const y = yLevels[row];
+        const z = cluster.center.z;
+
+        kernelMesh.position.set(x, y, z);
+        kernelMaterial.opacity = 0.6 * Math.sin(Math.PI * t); // fades in/out over the whole sweep
+
+        const [start, end] = clusterIndexRanges[clusterIndex];
+        for (let idx = start; idx < end; idx++) {
+            const dx = positionArray[idx * 3] - x;
+            const dy = positionArray[idx * 3 + 1] - y;
+            const dz = positionArray[idx * 3 + 2] - z;
+            const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            if (dist < KERNEL_HIT_RADIUS) {
+                pulsePoint(idx, 1 - dist / KERNEL_HIT_RADIUS);
+            }
+        }
+    }
+
     // Sync with the particles.js background, same as the previous globe: a link
     // "firing" sends a brief brightness ripple outward through nearby particles.
     const RIPPLE_RADIUS_PX = 420;
@@ -398,6 +472,7 @@
 
         updateHover();
         updateLinks(now);
+        updateSweep(now);
 
         // Decay active glow and write it into the color attribute, lerping each
         // affected point's color toward white and back to its base hue.
