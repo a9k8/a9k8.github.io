@@ -93,6 +93,17 @@
     const colorArray = new Float32Array(colors);
     const baseColorArray = colorArray.slice(); // untouched reference the "active glow" lerp resets back to
 
+    // Each cluster's color as HSL, used by the hover-glow below to brighten by
+    // raising lightness rather than multiplying RGB - scaling RGB channels
+    // directly pushes the weakest channel (e.g. red in teal) up to meet the
+    // others, and once every channel clips at 1.0 the result is just white
+    // regardless of hue. Lightness-boosting keeps the actual hue intact.
+    const clusterBaseHSL = CLUSTERS.map((cluster) => {
+        const hsl = {};
+        new THREE.Color(cluster.color).getHSL(hsl);
+        return hsl;
+    });
+
     // One-time "training converges" intro: points start scattered almost
     // randomly across the whole scene, then settle into their cluster
     // positions over a couple seconds - representations starting unstructured
@@ -663,9 +674,11 @@
     // approaches/leaves - distinct from the single-point hover glow above.
     const clusterHoverIntensity = new Float32Array(CLUSTERS.length); // 0..1 per cluster, eased each frame
     const HOVER_CLUSTER_RADIUS_PX = 320;
-    const HOVER_GLOW_AMPLITUDE = 3.2; // up to ~4.2x brightness at full intensity - stays the cluster's own hue, no white mix
+    const HOVER_LIGHTNESS_BOOST = 0.4; // added to HSL lightness at full intensity - stays capped well short of white
+    const HOVER_SATURATION_BOOST = 0.25; // a bit more vivid too, not just lighter
     const HOVER_EASE_SPEED = 0.12;
     const _tmpClusterScreenPos = new THREE.Vector3();
+    const _tmpHoverColor = new THREE.Color();
 
     function updateClusterHover() {
         let nearestIndex = -1;
@@ -692,13 +705,17 @@
                 continue; // already fully faded out - nothing to write
             }
 
-            const mult = 1 + HOVER_GLOW_AMPLITUDE * clusterHoverIntensity[ci];
+            const hsl = clusterBaseHSL[ci];
+            const boostedL = Math.min(0.92, hsl.l + HOVER_LIGHTNESS_BOOST * clusterHoverIntensity[ci]);
+            const boostedS = Math.min(1, hsl.s + HOVER_SATURATION_BOOST * clusterHoverIntensity[ci]);
+            _tmpHoverColor.setHSL(hsl.h, boostedS, boostedL);
+
             const [start, end] = clusterIndexRanges[ci];
             for (let idx = start; idx < end; idx++) {
                 const bi = idx * 3;
-                currentBaseArray[bi] = baseColorArray[bi] * mult;
-                currentBaseArray[bi + 1] = baseColorArray[bi + 1] * mult;
-                currentBaseArray[bi + 2] = baseColorArray[bi + 2] * mult;
+                currentBaseArray[bi] = _tmpHoverColor.r;
+                currentBaseArray[bi + 1] = _tmpHoverColor.g;
+                currentBaseArray[bi + 2] = _tmpHoverColor.b;
                 if (activeGlow[idx] <= 0.001) {
                     colorAttr.array[bi] = currentBaseArray[bi];
                     colorAttr.array[bi + 1] = currentBaseArray[bi + 1];
