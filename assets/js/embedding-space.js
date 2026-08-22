@@ -20,7 +20,7 @@
     const JOINT_CLUSTER_INDEX = CLUSTERS.length - 1;
 
     const POINT_SIZE = 0.16;
-    const MAX_LINKS = 90;
+    const MAX_LINKS = 450;
     const LINK_SPAWN_INTERVAL = 550; // ms
 
     // Box-Muller transform - gives clusters a denser core / tapering edge instead
