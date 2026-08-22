@@ -156,34 +156,13 @@
         return t < 1;
     }
 
-    // Ambient "breathing": each cluster's overall spread very slowly expands
-    // and contracts, independent of the intro/links/repel systems, so resting
-    // clusters still feel alive when nothing else is currently firing nearby.
-    // Runs only once the intro settle-in is done - it writes displayPositionArray
-    // every frame, same as updateIntro, so the two must never run in the same frame.
-    const BREATH_SPEED = 0.00022;
-    const BREATH_AMPLITUDE = 0.05; // +/-5% of each point's distance from its cluster center
-    const clusterBreathPhase = CLUSTERS.map(() => Math.random() * Math.PI * 2);
-
-    function updateBreathing(now) {
-        CLUSTERS.forEach((cluster, ci) => {
-            const [start, end] = clusterIndexRanges[ci];
-            const scale = 1 + Math.sin(now * BREATH_SPEED + clusterBreathPhase[ci]) * BREATH_AMPLITUDE;
-            for (let idx = start; idx < end; idx++) {
-                const bi = idx * 3;
-                displayPositionArray[bi] = cluster.center.x + (positionArray[bi] - cluster.center.x) * scale;
-                displayPositionArray[bi + 1] = cluster.center.y + (positionArray[bi + 1] - cluster.center.y) * scale;
-                displayPositionArray[bi + 2] = cluster.center.z + (positionArray[bi + 2] - cluster.center.z) * scale;
-            }
-        });
-    }
-
     // Contrastive push/pull: the links elsewhere only show attraction (a
     // point pulled toward the joint embedding). This is the missing other
     // half of contrastive learning - occasionally two points from different
     // clusters visibly drift apart and back, like a negative pair being
-    // pushed away from an anchor, before settling back into the resting
-    // (breathing) layout. Applied on top of updateBreathing's result each frame.
+    // pushed away from an anchor, before settling back to rest. Only the two
+    // points involved in an active repel are ever touched; every other point
+    // just stays at its resting positionArray value (set once, by the intro).
     const activeRepels = [];
     const REPEL_DISTANCE = 1.0;
     const REPEL_INTERVAL_MIN = 3500;
@@ -228,18 +207,27 @@
         for (let i = activeRepels.length - 1; i >= 0; i--) {
             const r = activeRepels[i];
             const t = (now - r.startTime) / r.duration;
+            const ai = r.indexA * 3, bi = r.indexB * 3;
             if (t >= 1) {
+                // Snap both points back to their exact resting position on completion.
+                displayPositionArray[ai] = positionArray[ai];
+                displayPositionArray[ai + 1] = positionArray[ai + 1];
+                displayPositionArray[ai + 2] = positionArray[ai + 2];
+                displayPositionArray[bi] = positionArray[bi];
+                displayPositionArray[bi + 1] = positionArray[bi + 1];
+                displayPositionArray[bi + 2] = positionArray[bi + 2];
                 activeRepels.splice(i, 1);
                 continue;
             }
+            // Computed fresh from the fixed resting position each frame (not
+            // accumulated), so it never drifts regardless of frame rate.
             const push = Math.sin(Math.PI * t) * REPEL_DISTANCE; // grows then eases back to 0
-            const ai = r.indexA * 3, bi = r.indexB * 3;
-            displayPositionArray[ai] += r.dir.x * push;
-            displayPositionArray[ai + 1] += r.dir.y * push;
-            displayPositionArray[ai + 2] += r.dir.z * push;
-            displayPositionArray[bi] -= r.dir.x * push;
-            displayPositionArray[bi + 1] -= r.dir.y * push;
-            displayPositionArray[bi + 2] -= r.dir.z * push;
+            displayPositionArray[ai] = positionArray[ai] + r.dir.x * push;
+            displayPositionArray[ai + 1] = positionArray[ai + 1] + r.dir.y * push;
+            displayPositionArray[ai + 2] = positionArray[ai + 2] + r.dir.z * push;
+            displayPositionArray[bi] = positionArray[bi] - r.dir.x * push;
+            displayPositionArray[bi + 1] = positionArray[bi + 1] - r.dir.y * push;
+            displayPositionArray[bi + 2] = positionArray[bi + 2] - r.dir.z * push;
         }
     }
 
@@ -601,6 +589,21 @@
         }
     }
 
+    // Also fires on its own, irregularly, so the retrieval demo is visible
+    // even for a visitor who never clicks - a random point "queries" its
+    // nearest neighbors periodically, same visual as the click-triggered one.
+    const REVEAL_INTERVAL_MIN = 5000;
+    const REVEAL_INTERVAL_MAX = 9000;
+
+    function scheduleNextReveal() {
+        const delay = REVEAL_INTERVAL_MIN + Math.random() * (REVEAL_INTERVAL_MAX - REVEAL_INTERVAL_MIN);
+        setTimeout(() => {
+            spawnNeighborReveal(Math.floor(Math.random() * pointCount));
+            scheduleNextReveal();
+        }, delay);
+    }
+    setTimeout(scheduleNextReveal, INTRO_DURATION + 900);
+
     function animate() {
         requestAnimationFrame(animate);
         const now = performance.now();
@@ -616,8 +619,7 @@
 
         if (introActive) {
             introActive = updateIntro(now);
-        } else {
-            updateBreathing(now);
+        } else if (activeRepels.length > 0) {
             updateRepels(now);
             geometry.attributes.position.needsUpdate = true;
         }
