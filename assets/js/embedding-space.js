@@ -94,7 +94,7 @@
     // randomly across the whole scene, then settle into their cluster
     // positions over a couple seconds - representations starting unstructured
     // and training organizing them, without needing any text to explain it.
-    const INTRO_DURATION = 2600; // ms
+    const INTRO_DURATION = 10000; // ms
     const introStartArray = new Float32Array(positionArray.length);
     const SCATTER_EXTENT = new THREE.Vector3(9, 6.5, 5.5);
     for (let i = 0; i < pointCount; i++) {
