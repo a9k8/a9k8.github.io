@@ -491,6 +491,79 @@
     window.addEventListener('mousemove', (e) => pointerMove(e.clientX, e.clientY));
     window.addEventListener('mouseup', pointerUp);
 
+    // Touch: one finger is left alone entirely (that's the OS's scroll
+    // gesture) and a tap (movement below CLICK_THRESHOLD) triggers the same
+    // nearest-neighbor reveal as a mouse click. Two fingers rotate the scene,
+    // the same way mouse-drag does - a two-finger gesture doesn't collide
+    // with page scrolling, so it's free to reuse for this. No preventDefault
+    // anywhere, so normal touch scrolling is never affected.
+    let touchMode = 'none'; // 'none' | 'single' (possible tap) | 'rotate' (two-finger)
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchMoveDistance = 0;
+    let lastMidX = 0;
+    let lastMidY = 0;
+
+    window.addEventListener('touchstart', (e) => {
+        if (e.target.closest(INTERACTIVE_SELECTOR)) return;
+        if (e.touches.length === 2) {
+            touchMode = 'rotate';
+            lastMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+            lastMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+            velocityX = 0;
+            document.body.classList.add('dragging-scene');
+        } else if (e.touches.length === 1 && touchMode === 'none') {
+            touchMode = 'single';
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            touchMoveDistance = 0;
+        }
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+        if (touchMode === 'rotate' && e.touches.length >= 2) {
+            const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+            const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+            const deltaX = midX - lastMidX;
+            const deltaY = midY - lastMidY;
+
+            sceneGroup.rotation.y += deltaX * DRAG_SENSITIVITY;
+            sceneGroup.rotation.x += deltaY * DRAG_SENSITIVITY;
+
+            velocityX = deltaX * DRAG_SENSITIVITY;
+            lastMidX = midX;
+            lastMidY = midY;
+        } else if (touchMode === 'single' && e.touches.length === 1) {
+            touchMoveDistance += Math.abs(e.touches[0].clientX - touchStartX) + Math.abs(e.touches[0].clientY - touchStartY);
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }
+    }, { passive: true });
+
+    window.addEventListener('touchend', (e) => {
+        if (touchMode === 'rotate') {
+            // Only end once both fingers are up - dropping to one finger
+            // mid-rotate should never be misread as the start of a tap.
+            if (e.touches.length < 2) {
+                touchMode = 'none';
+                dragEndTime = performance.now();
+                document.body.classList.remove('dragging-scene');
+            }
+            return;
+        }
+        if (touchMode === 'single') {
+            touchMode = 'none';
+            if (touchMoveDistance < CLICK_THRESHOLD && e.changedTouches.length > 0) {
+                const touch = e.changedTouches[0];
+                pointerNDC.x = (touch.clientX / window.innerWidth) * 2 - 1;
+                pointerNDC.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(pointerNDC, camera);
+                const hits = raycaster.intersectObject(points);
+                if (hits.length > 0) spawnNeighborReveal(hits[0].index);
+            }
+        }
+    }, { passive: true });
+
     // Hover: raycast against the point cloud to highlight the nearest point -
     // lets a visitor "explore" individual embeddings, not just watch the scene
     // auto-rotate. No caption/tooltip, just the glow.
