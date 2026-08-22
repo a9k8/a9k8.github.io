@@ -170,18 +170,11 @@ body {
     margin: 0 auto 4rem;
 }
 
-.wall-image {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    border-radius: 8px 8px 0 0;
-}
-
 .profile-img-container {
     position: relative;
     display: flex;
     justify-content: center;
-    margin-top: -100px;
+    margin-top: 2rem;
     margin-bottom: 1rem;
 }
 
@@ -581,12 +574,8 @@ body {
         font-size: 1.5rem;
     }
 
-    .wall-image {
-        height: 150px;
-    }
-
     .profile-img-container {
-        margin-top: -75px;
+        margin-top: 1.5rem;
     }
 
     .profile-img {
