@@ -77,7 +77,8 @@
         pointcloud: ['Semantic probe', 'Move to reveal local classes · click to expand the neighbourhood', 'Urban point cloud', 'Move pointer · click to query'],
         aerial: ['Multispectral footprint', 'Move the observation window · click to capture a local sample', 'Remote sensing', 'Move footprint · click to capture'],
         panoramic: ['Spherical gaze', 'Steer a latitude–longitude view across the 360° field', 'Panoramic vision', 'Move gaze · click to confirm'],
-        robotics: ['Navigation planner', 'Preview a road target · click to send the ground agent', 'Robotic perception', 'Move target · click to set goal']
+        robotics: ['Navigation planner', 'Preview a road target · click to send the ground agent', 'Robotic perception', 'Move target · click to set goal'],
+        combined: ['Combined observation', 'Move to sample the footprint and direct the gaze · click to hold both', 'Remote sensing + panoramic vision', 'Move to sample and direct the gaze']
       };
 
       this.generateWorld();
@@ -362,7 +363,8 @@
         pointcloud: ['Spatial reconstruction', 'Inspect structure · drag to orbit', 'Urban reconstruction', 'Hover or tap to inspect'],
         aerial: ['Earth observation', 'Move the footprint · click to hold', 'Multispectral sampling', 'Move to sample · click to hold'],
         panoramic: ['Panoramic perception', 'Direct the gaze · click to hold', '360° observation', 'Move to direct the gaze'],
-        robotics: ['Embodied navigation', 'Choose a road destination · click to navigate', 'Road navigation', 'Point and click to navigate']
+        robotics: ['Embodied navigation', 'Choose a road destination · click to navigate', 'Road navigation', 'Point and click to navigate'],
+        combined: ['Remote sensing + panoramic vision', 'Move to sample the footprint and direct the gaze · click to hold', 'Combined observation', 'Move to sample and direct the gaze']
       };
       const copy = this.cloud?.available ? sharedCopy[this.mode] : this.modeCopy[this.mode] || this.modeCopy.pointcloud;
       document.querySelectorAll('[data-world-title]').forEach((node) => { node.textContent = copy[0]; });
