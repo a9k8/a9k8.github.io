@@ -414,8 +414,8 @@
   function animate() {
     requestAnimationFrame(animate);
 
-    const elapsed = clock.getElapsedTime();
     const delta = clock.getDelta();
+    const elapsed = clock.elapsedTime;
 
     // Smooth mouse movement.
     mouse.lerp(targetMouse, 0.055);
