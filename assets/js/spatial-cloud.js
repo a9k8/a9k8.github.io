@@ -5,10 +5,11 @@
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const mix=(a,b,t)=>a+(b-a)*t;
   const modes={
-    pointcloud:{index:0,yaw:-.38,pitch:.42,distance:30,zoom:1,title:'Spatial reconstruction',hint:'Hover to inspect · drag to orbit'},
-    aerial:{index:1,yaw:-.28,pitch:1.20,distance:30,zoom:1.3,title:'Earth observation',hint:'Move to sample · click to hold'},
-    panoramic:{index:2,yaw:-.38,pitch:.42,distance:30,zoom:1,title:'Panoramic perception',hint:'Move to direct the gaze · click to hold'},
-    robotics:{index:3,yaw:-.38,pitch:.60,distance:31,zoom:.95,title:'Embodied navigation',hint:'Point along the road · click to navigate'}
+    pointcloud:{weights:[1,0,0,0],yaw:-.38,pitch:.42,distance:30,zoom:1,title:'Spatial reconstruction',hint:'Hover to inspect · drag to orbit'},
+    aerial:{weights:[0,1,0,0],yaw:-.28,pitch:1.20,distance:30,zoom:1.3,title:'Earth observation',hint:'Move to sample · click to hold'},
+    panoramic:{weights:[0,0,1,0],yaw:-.38,pitch:.42,distance:30,zoom:1,title:'Panoramic perception',hint:'Move to direct the gaze · click to hold'},
+    robotics:{weights:[0,0,0,1],yaw:-.38,pitch:.60,distance:31,zoom:.95,title:'Embodied navigation',hint:'Point along the road · click to navigate'},
+    combined:{weights:[0,1,1,0],yaw:-.32,pitch:.80,distance:31,zoom:1.08,title:'Remote sensing + panoramic vision',hint:'Move to sample the footprint and direct the gaze · click to hold'}
   };
   const colors=[
     [.18,.34,.45],[.34,.65,.84],[.39,.81,.87],
@@ -95,7 +96,7 @@
       this.coarse=matchMedia('(pointer: coarse)');
       this.pointer={x:-1000,y:-1000,nx:0,ny:0,active:false};this.parallax={x:0,y:0};
       this.orbit={yaw:0,pitch:0};this.rig={...modes[this.mode]};
-      this.weights=[0,0,0,0];this.weights[modes[this.mode].index]=1;
+      this.weights=[...modes[this.mode].weights];
       this.semantic=0;this.semanticTarget=0;this.selected=-1;this.pinned=-1;
       this.foot={x:1,z:0,held:false};this.gaze={yaw:-.5,pitch:.04,held:false};
       this.robot={z:5.8,start:5.8,goal:-5.8,preview:null,keyboardPreview:null,active:false};
@@ -302,7 +303,7 @@
       this.mode=mode;this.pinned=-1;this.selected=-1;this.drag=null;
       this.pointer.active=false;this.orbit={yaw:0,pitch:0};
       this.canvas.setAttribute('aria-label','Interactive synthetic urban district: '+modes[mode].title+'. '+modes[mode].hint+'. Drag to orbit. Arrow keys interact with this mode; Enter selects or holds; Space pauses; R resets.');
-      if(initial||this.motion.matches){this.rig={...modes[mode]};this.weights=this.weights.map((_,i)=>Number(i===modes[mode].index));}
+      if(initial||this.motion.matches){this.rig={...modes[mode]};this.weights=[...modes[mode].weights];}
       this.setActive(true);this.requestDraw();
     }
     setActive(value){
@@ -331,8 +332,8 @@
         const tapped=this.drag&&!this.drag.moved&&e.type!=='pointercancel';this.drag=null;this.canvas.classList.remove('is-dragging');
         if(tapped&&this.view){
           if(this.mode==='pointcloud'){const hit=this.pick();this.pinned=hit===this.pinned?-1:hit;}
-          if(this.mode==='aerial'){this.updateInteraction(0);this.foot.held=!this.foot.held;}
-          if(this.mode==='panoramic'){this.updateInteraction(0);this.gaze.held=!this.gaze.held;}
+          if(this.mode==='aerial'||this.mode==='combined'){this.updateInteraction(0);this.foot.held=!this.foot.held;}
+          if(this.mode==='panoramic'||this.mode==='combined'){this.updateInteraction(0);this.gaze.held=!this.gaze.held;}
           if(this.mode==='robotics'){const g=this.groundAtPointer();if(g){this.robot.start=this.robot.z;this.robot.goal=clamp(g[2],-7,7);this.robot.active=true;if(this.motion.matches)this.robot.z=this.robot.goal;}}
         }
         this.requestDraw();
@@ -347,15 +348,15 @@
         else if(e.key.toLowerCase()==='r')this.reset();
         else if(e.key==='Enter'){
           if(this.mode==='pointcloud'){const buildings=this.objects.filter(o=>o.label.startsWith('Architecture'));const current=buildings.findIndex(o=>o.id===this.pinned);this.pinned=buildings[(current+1)%buildings.length].id;}
-          if(this.mode==='aerial')this.foot.held=!this.foot.held;
-          if(this.mode==='panoramic')this.gaze.held=!this.gaze.held;
+          if(this.mode==='aerial'||this.mode==='combined')this.foot.held=!this.foot.held;
+          if(this.mode==='panoramic'||this.mode==='combined')this.gaze.held=!this.gaze.held;
           if(this.mode==='robotics'){this.robot.start=this.robot.z;this.robot.goal=this.robot.preview??-this.robot.goal;this.robot.active=true;if(this.motion.matches)this.robot.z=this.robot.goal;}
         }else{
           const dx=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0,dz=e.key==='ArrowDown'?1:e.key==='ArrowUp'?-1:0;
           this.pointer.active=false;
           if(this.mode==='pointcloud'){this.orbit.yaw-=dx*.12;this.orbit.pitch=clamp(this.orbit.pitch-dz*.06,-.24,.24);}
-          if(this.mode==='aerial'){this.foot.held=true;this.foot.x=clamp(this.foot.x+dx*.5,-5,5);this.foot.z=clamp(this.foot.z+dz*.5,-6,6);}
-          if(this.mode==='panoramic'){this.gaze.held=true;this.gaze.yaw+=dx*.16;this.gaze.pitch=clamp(this.gaze.pitch-dz*.10,-.7,.7);}
+          if(this.mode==='aerial'||this.mode==='combined'){this.foot.held=true;this.foot.x=clamp(this.foot.x+dx*.5,-5,5);this.foot.z=clamp(this.foot.z+dz*.5,-6,6);}
+          if(this.mode==='panoramic'||this.mode==='combined'){this.gaze.held=true;this.gaze.yaw+=dx*.16;this.gaze.pitch=clamp(this.gaze.pitch-dz*.10,-.7,.7);}
           if(this.mode==='robotics')this.robot.keyboardPreview=clamp((this.robot.preview??this.robot.goal)+dx+dz,-7,7);
         }
         this.requestDraw();
@@ -400,13 +401,13 @@
     }
     updateInteraction(dt){
       const still=this.paused||this.motion.matches;const ease=still?1:1-Math.exp(-Math.max(dt,16)/55);
-      if(!this.foot.held&&this.mode==='aerial'){
+      if(!this.foot.held&&(this.mode==='aerial'||this.mode==='combined')){
         const g=this.groundAtPointer();
         const x=g?clamp(g[0],-5,5):1.3+Math.sin(this.elapsed*.00017)*2.7;
         const z=g?clamp(g[2],-6,6):Math.cos(this.elapsed*.00013)*3.5;
         this.foot.x=mix(this.foot.x,x,ease);this.foot.z=mix(this.foot.z,z,ease);
       }
-      if(!this.gaze.held&&this.mode==='panoramic'){
+      if(!this.gaze.held&&(this.mode==='panoramic'||this.mode==='combined')){
         const yaw=this.pointer.active?this.pointer.nx*5.8:Math.sin(this.elapsed*.00017)*1.7-.5;
         const pitch=this.pointer.active?-this.pointer.ny*1.5:.04;
         this.gaze.yaw=mix(this.gaze.yaw,yaw,ease);this.gaze.pitch=mix(this.gaze.pitch,pitch,ease);
@@ -458,8 +459,9 @@
       if(this.coarse.matches&&this.mode==='pointcloud')text='Tap to inspect · drag to orbit';
       if(this.mode==='pointcloud'){
         const object=this.objects.find(o=>o.id===this.selected);if(object)text=object.label+(this.pinned>0?' · selected':'');
-      }else if(this.mode==='aerial'&&this.foot.held)text='Sample held · click to release';
-      else if(this.mode==='panoramic'&&this.gaze.held)text='Gaze held · click to release';
+      }else if(this.mode==='combined'&&(this.foot.held||this.gaze.held))text='Sample and gaze held · click to release';
+      else if((this.mode==='aerial'||this.mode==='combined')&&this.foot.held)text='Sample held · click to release';
+      else if((this.mode==='panoramic'||this.mode==='combined')&&this.gaze.held)text='Gaze held · click to release';
       else if(this.mode==='robotics'&&this.robot.active)text='Following the road · click to set a new destination';
       if(this.label.textContent!==text)this.label.textContent=text;
     }
@@ -471,7 +473,7 @@
       const cameraEase=instant?1:1-Math.exp(-dt/190),interactionEase=instant?1:1-Math.exp(-dt/75);
       const desired=modes[this.mode];let settling=false;
       for(const key of ['yaw','pitch','distance','zoom']){const before=this.rig[key];this.rig[key]=mix(before,desired[key],cameraEase);settling||=Math.abs(this.rig[key]-desired[key])>.0005;}
-      this.weights=this.weights.map((v,i)=>mix(v,Number(i===desired.index),cameraEase));
+      this.weights=this.weights.map((v,i)=>mix(v,desired.weights[i],cameraEase));
       this.semantic=mix(this.semantic,this.semanticTarget,interactionEase);
       this.parallax.x=mix(this.parallax.x,this.pointer.active?this.pointer.nx:0,interactionEase);
       this.parallax.y=mix(this.parallax.y,this.pointer.active?this.pointer.ny:0,interactionEase);
