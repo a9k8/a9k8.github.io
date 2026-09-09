@@ -48,30 +48,34 @@
   // Manifold parameters
   // ------------------------------------------------------------
 
-  const WIDTH = 9.5;
-  const HEIGHT = 4.5;
+  const SEG_X = 120;
+  const SEG_Y = 68;
 
-  const SEG_X = 100;
-  const SEG_Y = 52;
+  // Extra size beyond the exact camera frustum so that the slow
+  // rotation and mouse tilt never reveal an edge of the mesh.
+  const FILL_MARGIN = 1.45;
+
+  // How pronounced the saddle (hyperbolic paraboloid) curvature is.
+  const CURVE_STRENGTH = 0.85;
+
+  let WIDTH = 1;
+  let HEIGHT = 1;
+
+  function computeFillSize() {
+    const vFov = THREE.MathUtils.degToRad(camera.fov);
+    const visibleHeight =
+      2 * Math.tan(vFov / 2) * Math.abs(camera.position.z);
+
+    const visibleWidth = visibleHeight * camera.aspect;
+
+    return {
+      width: visibleWidth * FILL_MARGIN,
+      height: visibleHeight * FILL_MARGIN
+    };
+  }
 
   // ------------------------------------------------------------
   // Create manifold
-  // ------------------------------------------------------------
-
-  const geometry = new THREE.PlaneGeometry(
-    WIDTH,
-    HEIGHT,
-    SEG_X,
-    SEG_Y
-  );
-
-  const positions = geometry.attributes.position;
-
-  // Save original coordinates.
-  const basePositions = new Float32Array(positions.array);
-
-  // ------------------------------------------------------------
-  // Material
   // ------------------------------------------------------------
 
   const material = new THREE.MeshBasicMaterial({
@@ -82,20 +86,44 @@
     wireframe: false
   });
 
-  const surface = new THREE.Mesh(geometry, material);
+  const surface = new THREE.Mesh(new THREE.BufferGeometry(), material);
 
   surface.rotation.x = -0.22;
 
   scene.add(surface);
 
+  let positions = null;
+  let basePositions = null;
+
+  function rebuildSurfaceGeometry(width, height) {
+    const geometry = new THREE.PlaneGeometry(
+      width,
+      height,
+      SEG_X,
+      SEG_Y
+    );
+
+    positions = geometry.attributes.position;
+    basePositions = new Float32Array(positions.array);
+
+    surface.geometry.dispose();
+    surface.geometry = geometry;
+  }
+
   // ------------------------------------------------------------
   // Live wireframe
   // ------------------------------------------------------------
 
+  const baseWireOpacity = 0.22;
+  const glowWireOpacity = 0.5;
+
+  const baseColor = new THREE.Color(0x5868a0);
+  const glowColor = new THREE.Color(0x8fb2ff);
+
   const wireMaterial = new THREE.LineBasicMaterial({
-    color: 0x5868a0,
+    color: baseColor.clone(),
     transparent: true,
-    opacity: 0.22
+    opacity: baseWireOpacity
   });
 
   const wirePositions = [];
@@ -162,9 +190,15 @@
     mouseActive = false;
   });
 
+  document.addEventListener("mouseleave", () => {
+    mouseActive = false;
+  });
+
   // ------------------------------------------------------------
   // Ripple system
   // ------------------------------------------------------------
+
+  const RIPPLE_LIFETIME = 1.8;
 
   const ripples = [];
 
@@ -173,13 +207,13 @@
       x,
       y,
       age: 0,
-      strength: 0.16,
+      strength: 0.22,
       speed: 1.8,
-      width: 0.16
+      width: 0.14
     });
 
     // Keep the effect lightweight.
-    if (ripples.length > 8) {
+    if (ripples.length > 10) {
       ripples.shift();
     }
   }
@@ -217,11 +251,45 @@
   }
 
   // ------------------------------------------------------------
+  // Advance ripple ages once per frame and report total energy
+  // ------------------------------------------------------------
+
+  function advanceRipples(delta) {
+    let energy = 0;
+
+    for (let i = ripples.length - 1; i >= 0; i--) {
+      const ripple = ripples[i];
+
+      ripple.age += delta;
+
+      if (ripple.age > RIPPLE_LIFETIME) {
+        ripples.splice(i, 1);
+        continue;
+      }
+
+      const fade = Math.exp(-ripple.age * 1.8);
+      energy += fade * ripple.strength;
+    }
+
+    return energy;
+  }
+
+  // ------------------------------------------------------------
   // Surface deformation
   // ------------------------------------------------------------
 
   function deformVertex(x, y, time) {
     let z = 0;
+
+    // ----------------------------------------------------------
+    // Saddle curvature: makes this an actual curved manifold
+    // instead of a flat plane with waves on top.
+    // ----------------------------------------------------------
+
+    const nx = x / (WIDTH * 0.5);
+    const ny = y / (HEIGHT * 0.5);
+
+    z += (nx * nx - ny * ny) * CURVE_STRENGTH;
 
     // ----------------------------------------------------------
     // Base manifold waves
@@ -243,8 +311,8 @@
     // ----------------------------------------------------------
 
     if (mouseActive) {
-      const dx = x / (WIDTH * 0.5) - targetMouse.x;
-      const dy = y / (HEIGHT * 0.5) - targetMouse.y;
+      const dx = nx - targetMouse.x;
+      const dy = ny - targetMouse.y;
 
       const distance = Math.sqrt(dx * dx + dy * dy);
 
@@ -261,18 +329,14 @@
     for (let i = ripples.length - 1; i >= 0; i--) {
       const ripple = ripples[i];
 
-      const dx =
-        x / (WIDTH * 0.5) - ripple.x;
-
-      const dy =
-        y / (HEIGHT * 0.5) - ripple.y;
+      const dx = nx - ripple.x;
+      const dy = ny - ripple.y;
 
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       const radius = ripple.age * ripple.speed;
 
-      const ringDistance =
-        distance - radius;
+      const ringDistance = distance - radius;
 
       // Gaussian ring.
       const ring =
@@ -282,23 +346,13 @@
         );
 
       // Fade with age.
-      const fade =
-        Math.exp(-ripple.age * 1.8);
+      const fade = Math.exp(-ripple.age * 1.8);
 
       z +=
-        Math.sin(
-          ringDistance * 24
-        ) *
+        Math.sin(ringDistance * 24) *
         ring *
         fade *
         ripple.strength;
-
-      ripple.age += 0.016;
-
-      // Remove old ripple.
-      if (ripple.age > 1.8) {
-        ripples.splice(i, 1);
-      }
     }
 
     return z;
@@ -323,6 +377,7 @@
     }
 
     positions.needsUpdate = true;
+    surface.geometry.computeBoundingSphere();
 
     // ----------------------------------------------------------
     // Update wireframe from the SAME deformed surface
@@ -354,6 +409,7 @@
   // ------------------------------------------------------------
 
   const clock = new THREE.Clock();
+  const tmpColor = new THREE.Color();
 
   function animate() {
     requestAnimationFrame(animate);
@@ -365,7 +421,22 @@
     mouse.lerp(targetMouse, 0.055);
 
     updateRippleCreation(delta);
+    const rippleEnergy = advanceRipples(delta);
     updateGeometry(elapsed);
+
+    // ----------------------------------------------------------
+    // Ripple glow: brighten the mesh while ripples are active.
+    // ----------------------------------------------------------
+
+    const glow = Math.min(rippleEnergy, 1);
+
+    wireMaterial.opacity =
+      baseWireOpacity + glow * (glowWireOpacity - baseWireOpacity);
+
+    tmpColor.copy(baseColor).lerp(glowColor, glow);
+    wireMaterial.color.copy(tmpColor);
+
+    material.opacity = 0.045 + glow * 0.05;
 
     // ----------------------------------------------------------
     // Continuous slow rotation
@@ -396,6 +467,20 @@
     renderer.render(scene, camera);
   }
 
+  // ------------------------------------------------------------
+  // Sizing: keep the manifold spanning the full viewport
+  // ------------------------------------------------------------
+
+  function applyFillSize() {
+    const size = computeFillSize();
+
+    WIDTH = size.width;
+    HEIGHT = size.height;
+
+    rebuildSurfaceGeometry(WIDTH, HEIGHT);
+  }
+
+  applyFillSize();
   animate();
 
   // ------------------------------------------------------------
@@ -412,6 +497,8 @@
       window.innerWidth,
       window.innerHeight
     );
+
+    applyFillSize();
   });
 
 })();
