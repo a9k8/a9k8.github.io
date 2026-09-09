@@ -6,7 +6,7 @@
   const mix=(a,b,t)=>a+(b-a)*t;
   const modes={
     pointcloud:{index:0,yaw:-.38,pitch:.42,distance:30,zoom:1,title:'Spatial reconstruction',hint:'Hover to inspect · drag to orbit'},
-    aerial:{index:1,yaw:-.28,pitch:1.20,distance:34,zoom:.82,title:'Earth observation',hint:'Move to sample · click to hold'},
+    aerial:{index:1,yaw:-.28,pitch:1.20,distance:30,zoom:1.3,title:'Earth observation',hint:'Move to sample · click to hold'},
     panoramic:{index:2,yaw:-.38,pitch:.42,distance:30,zoom:1,title:'Panoramic perception',hint:'Move to direct the gaze · click to hold'},
     robotics:{index:3,yaw:-.38,pitch:.60,distance:31,zoom:.95,title:'Embodied navigation',hint:'Point along the road · click to navigate'}
   };
