@@ -1,0 +1,16 @@
+name: "Aniket Junghare"
+role: "PhD Research Scholar"
+site_title: "Aniket Junghare"
+
+# Navigation Menu
+nav:
+  - label: "Home"
+    link: "index.html"
+  - label: "Publications"
+    link: "publications.html"
+  - label: "CV"
+    link: "cv.html"
+
+# Social Links (can be used in footer or bio)
+email: "aniketjunghare.iitb@gmail.com"
+linkedin: "https://www.linkedin.com/in/junghare-aniket/"
