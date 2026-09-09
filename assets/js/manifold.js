@@ -195,83 +195,176 @@
   });
 
   // ------------------------------------------------------------
-  // Ripple system
+  // Ripple system: a small 2D wave-equation fluid grid, the same
+  // technique water-ripple plugins (e.g. jquery.ripples) use on a
+  // WebGL texture -- height + velocity fields updated with a
+  // discrete Laplacian, sampled by the mesh instead of a shader.
   // ------------------------------------------------------------
 
-  const RIPPLE_LIFETIME = 1.8;
+  const CELL_SIZE = 0.25;
+  const WAVE_SPREAD = 2.0;
+  const DAMPING = 0.985;
+  const DROP_RADIUS = 1.1;
+  const DROP_STRENGTH = 1.1;
+  const RIPPLE_Z_SCALE = 0.32;
 
-  const ripples = [];
+  let gridW = 1;
+  let gridH = 1;
 
-  function createRipple(x, y) {
-    ripples.push({
-      x,
-      y,
-      age: 0,
-      strength: 0.22,
-      speed: 1.8,
-      width: 0.14
-    });
+  let heightA = new Float32Array(1);
+  let velocityA = new Float32Array(1);
+  let heightB = new Float32Array(1);
+  let velocityB = new Float32Array(1);
 
-    // Keep the effect lightweight.
-    if (ripples.length > 10) {
-      ripples.shift();
+  function rebuildFluidGrid(width, height) {
+    gridW = Math.max(4, Math.round(width / CELL_SIZE));
+    gridH = Math.max(4, Math.round(height / CELL_SIZE));
+
+    const size = gridW * gridH;
+
+    heightA = new Float32Array(size);
+    velocityA = new Float32Array(size);
+    heightB = new Float32Array(size);
+    velocityB = new Float32Array(size);
+  }
+
+  function cellAt(field, gx, gy) {
+    const cx = gx < 0 ? 0 : gx >= gridW ? gridW - 1 : gx;
+    const cy = gy < 0 ? 0 : gy >= gridH ? gridH - 1 : gy;
+
+    return field[cy * gridW + cx];
+  }
+
+  // World-space (mesh-local) coordinates to fractional grid coordinates.
+  function worldToGrid(x, y) {
+    return {
+      gx: (x / WIDTH + 0.5) * (gridW - 1),
+      gy: (y / HEIGHT + 0.5) * (gridH - 1)
+    };
+  }
+
+  function stepFluid() {
+    for (let gy = 0; gy < gridH; gy++) {
+      for (let gx = 0; gx < gridW; gx++) {
+        const i = gy * gridW + gx;
+
+        const average =
+          (cellAt(heightA, gx - 1, gy) +
+            cellAt(heightA, gx + 1, gy) +
+            cellAt(heightA, gx, gy - 1) +
+            cellAt(heightA, gx, gy + 1)) *
+          0.25;
+
+        let vel = velocityA[i] + (average - heightA[i]) * WAVE_SPREAD;
+        vel *= DAMPING;
+
+        heightB[i] = heightA[i] + vel;
+        velocityB[i] = vel;
+      }
+    }
+
+    const tmpH = heightA;
+    heightA = heightB;
+    heightB = tmpH;
+
+    const tmpV = velocityA;
+    velocityA = velocityB;
+    velocityB = tmpV;
+  }
+
+  // Raised-cosine bump, same shape jquery.ripples uses for a drop.
+  function injectDrop(x, y, radius, strength) {
+    const { gx: cgx, gy: cgy } = worldToGrid(x, y);
+    const cellRadius = radius / CELL_SIZE;
+
+    const minGx = Math.max(0, Math.floor(cgx - cellRadius));
+    const maxGx = Math.min(gridW - 1, Math.ceil(cgx + cellRadius));
+    const minGy = Math.max(0, Math.floor(cgy - cellRadius));
+    const maxGy = Math.min(gridH - 1, Math.ceil(cgy + cellRadius));
+
+    for (let gy = minGy; gy <= maxGy; gy++) {
+      for (let gx = minGx; gx <= maxGx; gx++) {
+        const dx = gx - cgx;
+        const dy = gy - cgy;
+
+        const dist = Math.sqrt(dx * dx + dy * dy) / cellRadius;
+
+        if (dist > 1) continue;
+
+        const drop = 0.5 - Math.cos(dist * Math.PI) * 0.5;
+
+        heightA[gy * gridW + gx] += drop * strength;
+      }
     }
   }
 
-  let lastRippleX = 0;
-  let lastRippleY = 0;
-  let rippleTimer = 0;
+  // Bilinear-sample the height field at a world-space coordinate.
+  function sampleRipple(x, y) {
+    const { gx, gy } = worldToGrid(x, y);
 
-  // ------------------------------------------------------------
-  // Convert mouse movement into ripples
-  // ------------------------------------------------------------
+    const gx0 = Math.floor(gx);
+    const gy0 = Math.floor(gy);
 
-  function updateRippleCreation(delta) {
+    const tx = gx - gx0;
+    const ty = gy - gy0;
+
+    const h00 = cellAt(heightA, gx0, gy0);
+    const h10 = cellAt(heightA, gx0 + 1, gy0);
+    const h01 = cellAt(heightA, gx0, gy0 + 1);
+    const h11 = cellAt(heightA, gx0 + 1, gy0 + 1);
+
+    const top = h00 + (h10 - h00) * tx;
+    const bottom = h01 + (h11 - h01) * tx;
+
+    return top + (bottom - top) * ty;
+  }
+
+  let lastDropX = 0;
+  let lastDropY = 0;
+  let dropTimer = 0;
+
+  function mouseWorldPosition() {
+    // The mesh extends past the camera frustum by FILL_MARGIN, so
+    // screen-space NDC only covers the inner 1 / FILL_MARGIN of it.
+    return {
+      x: (targetMouse.x * WIDTH) / (2 * FILL_MARGIN),
+      y: (targetMouse.y * HEIGHT) / (2 * FILL_MARGIN)
+    };
+  }
+
+  function updateDropInjection(delta) {
     if (!mouseActive) {
-      rippleTimer = 0;
+      dropTimer = 0;
       return;
     }
 
-    rippleTimer += delta;
+    dropTimer += delta;
 
-    const dx = targetMouse.x - lastRippleX;
-    const dy = targetMouse.y - lastRippleY;
+    const { x, y } = mouseWorldPosition();
+
+    const dx = x - lastDropX;
+    const dy = y - lastDropY;
 
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    // Create a ripple as the cursor moves.
-    if (distance > 0.035 && rippleTimer > 0.045) {
-      createRipple(targetMouse.x, targetMouse.y);
+    if (distance > CELL_SIZE * 0.8 && dropTimer > 0.04) {
+      injectDrop(x, y, DROP_RADIUS, DROP_STRENGTH);
 
-      lastRippleX = targetMouse.x;
-      lastRippleY = targetMouse.y;
-
-      rippleTimer = 0;
+      lastDropX = x;
+      lastDropY = y;
+      dropTimer = 0;
     }
   }
 
-  // ------------------------------------------------------------
-  // Advance ripple ages once per frame and report total energy
-  // ------------------------------------------------------------
+  function rippleEnergy() {
+    let maxAbs = 0;
 
-  function advanceRipples(delta) {
-    let energy = 0;
-
-    for (let i = ripples.length - 1; i >= 0; i--) {
-      const ripple = ripples[i];
-
-      ripple.age += delta;
-
-      if (ripple.age > RIPPLE_LIFETIME) {
-        ripples.splice(i, 1);
-        continue;
-      }
-
-      const fade = Math.exp(-ripple.age * 1.8);
-      energy += fade * ripple.strength;
+    for (let i = 0; i < heightA.length; i++) {
+      const abs = Math.abs(heightA[i]);
+      if (abs > maxAbs) maxAbs = abs;
     }
 
-    return energy;
+    return maxAbs;
   }
 
   // ------------------------------------------------------------
@@ -307,53 +400,10 @@
     z += baseWave + secondaryWave;
 
     // ----------------------------------------------------------
-    // Mouse-following soft deformation
+    // Fluid ripples
     // ----------------------------------------------------------
 
-    if (mouseActive) {
-      const dx = nx - targetMouse.x;
-      const dy = ny - targetMouse.y;
-
-      const distance = Math.sqrt(dx * dx + dy * dy);
-
-      const influence =
-        Math.exp(-distance * distance * 7.0);
-
-      z += influence * 0.12;
-    }
-
-    // ----------------------------------------------------------
-    // Propagating ripples
-    // ----------------------------------------------------------
-
-    for (let i = ripples.length - 1; i >= 0; i--) {
-      const ripple = ripples[i];
-
-      const dx = nx - ripple.x;
-      const dy = ny - ripple.y;
-
-      const distance = Math.sqrt(dx * dx + dy * dy);
-
-      const radius = ripple.age * ripple.speed;
-
-      const ringDistance = distance - radius;
-
-      // Gaussian ring.
-      const ring =
-        Math.exp(
-          -(ringDistance * ringDistance) /
-          (ripple.width * ripple.width)
-        );
-
-      // Fade with age.
-      const fade = Math.exp(-ripple.age * 1.8);
-
-      z +=
-        Math.sin(ringDistance * 24) *
-        ring *
-        fade *
-        ripple.strength;
-    }
+    z += sampleRipple(x, y) * RIPPLE_Z_SCALE;
 
     return z;
   }
@@ -420,15 +470,15 @@
     // Smooth mouse movement.
     mouse.lerp(targetMouse, 0.055);
 
-    updateRippleCreation(delta);
-    const rippleEnergy = advanceRipples(delta);
+    updateDropInjection(delta);
+    stepFluid();
     updateGeometry(elapsed);
 
     // ----------------------------------------------------------
     // Ripple glow: brighten the mesh while ripples are active.
     // ----------------------------------------------------------
 
-    const glow = Math.min(rippleEnergy, 1);
+    const glow = Math.min(rippleEnergy() * 1.4, 1);
 
     wireMaterial.opacity =
       baseWireOpacity + glow * (glowWireOpacity - baseWireOpacity);
@@ -478,6 +528,7 @@
     HEIGHT = size.height;
 
     rebuildSurfaceGeometry(WIDTH, HEIGHT);
+    rebuildFluidGrid(WIDTH, HEIGHT);
   }
 
   applyFillSize();
