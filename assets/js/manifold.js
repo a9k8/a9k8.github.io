@@ -1,34 +1,32 @@
-/* ============================================================
-   Interactive Latent Manifold Background
-   ------------------------------------------------------------
-   - Full-screen continuous manifold
-   - Sparse / readable
-   - Continuous idle movement
-   - Mouse-controlled rotation
-   - Mouse-controlled local deformation
-   - Does not block page interaction
-   ============================================================ */
-
 (function () {
-    if (!window.THREE) return;
+    "use strict";
 
-    const host = document.getElementById("manifold-bg");
-    if (!host) return;
+    if (!window.THREE) {
+        console.error("Three.js is not loaded.");
+        return;
+    }
 
-    /* ---------------------------------------------------------
-       Scene
-       --------------------------------------------------------- */
+    const container = document.getElementById("manifold-bg");
+
+    if (!container) {
+        console.error("Cannot find #manifold-bg.");
+        return;
+    }
+
+    /* =========================================================
+       SCENE
+       ========================================================= */
 
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(
-        42,
+        40,
         window.innerWidth / window.innerHeight,
         0.1,
         100
     );
 
-    camera.position.set(0, 2.6, 13);
+    camera.position.set(0, 2.8, 13);
     camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({
@@ -48,35 +46,39 @@
 
     renderer.setClearColor(0x000000, 0);
 
+    renderer.domElement.style.position = "absolute";
+    renderer.domElement.style.inset = "0";
+    renderer.domElement.style.width = "100%";
+    renderer.domElement.style.height = "100%";
     renderer.domElement.style.pointerEvents = "none";
 
-    host.appendChild(renderer.domElement);
+    container.appendChild(renderer.domElement);
 
-    /* ---------------------------------------------------------
-       Main manifold group
-       --------------------------------------------------------- */
+    /* =========================================================
+       MANIFOLD GROUP
+       ========================================================= */
 
     const manifold = new THREE.Group();
 
-    manifold.position.set(0, -0.2, 0);
+    manifold.position.set(
+        0,
+        -0.25,
+        0
+    );
 
-    /*
-     * Start with a slight perspective so the surface
-     * feels three-dimensional rather than flat.
-     */
-    manifold.rotation.x = -0.48;
+    manifold.rotation.x = -0.45;
 
     scene.add(manifold);
 
-    /* ---------------------------------------------------------
-       Manifold resolution
-       --------------------------------------------------------- */
+    /* =========================================================
+       MANIFOLD RESOLUTION
+       ========================================================= */
 
-    const COLS = 82;
-    const ROWS = 24;
+    const COLS = 72;
+    const ROWS = 20;
 
-    const WIDTH = 18.5;
-    const DEPTH = 7.2;
+    const WIDTH = 21;
+    const DEPTH = 7.5;
 
     const vertexCount = COLS * ROWS;
 
@@ -84,7 +86,7 @@
         vertexCount * 3
     );
 
-    const originalPositions = new Float32Array(
+    const basePositions = new Float32Array(
         vertexCount * 3
     );
 
@@ -94,120 +96,119 @@
 
     const indices = [];
 
-    /* ---------------------------------------------------------
-       Palette
-       --------------------------------------------------------- */
+    /* =========================================================
+       COLORS
+       ========================================================= */
 
-    const blue = new THREE.Color("#537fa3");
-    const indigo = new THREE.Color("#68658b");
-    const violet = new THREE.Color("#91718b");
-    const ochre = new THREE.Color("#c4935b");
+    const blue = new THREE.Color("#4f789b");
+    const indigo = new THREE.Color("#656487");
+    const violet = new THREE.Color("#8b6c87");
+    const orange = new THREE.Color("#bf8d55");
 
-    function getColor(t) {
+    function gradientColor(t) {
 
-        const color = new THREE.Color();
+        const c = new THREE.Color();
 
-        if (t < 0.42) {
+        if (t < 0.4) {
 
-            color.lerpColors(
+            c.lerpColors(
                 blue,
                 indigo,
-                t / 0.42
+                t / 0.4
             );
 
         } else if (t < 0.72) {
 
-            color.lerpColors(
+            c.lerpColors(
                 indigo,
                 violet,
-                (t - 0.42) / 0.30
+                (t - 0.4) / 0.32
             );
 
         } else {
 
-            color.lerpColors(
+            c.lerpColors(
                 violet,
-                ochre,
+                orange,
                 (t - 0.72) / 0.28
             );
         }
 
-        return color;
+        return c;
     }
 
-    /* ---------------------------------------------------------
-       Parametric latent manifold
-       --------------------------------------------------------- */
+    /* =========================================================
+       PARAMETRIC HYPERBOLIC MANIFOLD
+       ========================================================= */
 
-    function manifoldSurface(u, v) {
+    function getSurface(u, v) {
 
         /*
-         * Broad asymmetric hyperbolic structure.
-         *
-         * The left side has a stronger funnel,
-         * while the center/right becomes a smoother
-         * saddle-like latent landscape.
+         * Asymmetric hyperbolic opening.
          */
 
-        const leftFunnel =
-            1.0 +
-            0.90 *
+        const funnel =
+            1 +
+            1.15 *
             Math.exp(
                 -Math.pow(
-                    (u + 6.2) / 2.5,
+                    (u + 6.4) / 2.5,
                     2
                 )
             );
 
-        const transverse =
-            v * leftFunnel;
+        const y =
+            v * funnel;
 
         /*
-         * Hyperbolic / saddle component.
+         * Hyperbolic saddle component.
          */
+
         let z =
             0.31 *
             (
-                transverse * transverse / 2.8
+                (y * y) / 2.9
                 -
-                0.065 * u * u
+                0.07 * u * u
             );
 
         /*
-         * Large-scale flowing waves.
+         * Large flowing waves.
          */
+
         z +=
-            0.25 *
+            0.24 *
             Math.sin(
-                u * 0.72
+                u * 0.64
             ) *
             (
-                0.35 +
-                0.65 *
-                Math.abs(v) / 3.6
+                0.32 +
+                0.68 *
+                Math.abs(v) /
+                (DEPTH / 2)
             );
 
         /*
-         * Small irregularity so the surface
-         * does not look perfectly synthetic.
+         * Small irregularity.
          */
+
         z +=
-            0.055 *
+            0.045 *
             Math.cos(
-                u * 0.38 +
-                v * 1.05
+                u * 0.32 +
+                v * 1.15
             );
 
         return {
             x: u,
-            y: transverse,
+            y: y,
             z: z
         };
     }
 
-    /* ---------------------------------------------------------
-       Create vertices
-       --------------------------------------------------------- */
+    /* =========================================================
+       CREATE VERTICES
+       ========================================================= */
 
     let vertex = 0;
 
@@ -215,21 +216,26 @@
 
         const u =
             -WIDTH / 2 +
-            WIDTH * i / (COLS - 1);
+            WIDTH *
+            i /
+            (COLS - 1);
 
         const color =
-            getColor(
-                i / (COLS - 1)
+            gradientColor(
+                i /
+                (COLS - 1)
             );
 
         for (let j = 0; j < ROWS; j++) {
 
             const v =
                 -DEPTH / 2 +
-                DEPTH * j / (ROWS - 1);
+                DEPTH *
+                j /
+                (ROWS - 1);
 
-            const point =
-                manifoldSurface(
+            const p =
+                getSurface(
                     u,
                     v
                 );
@@ -238,16 +244,16 @@
                 vertex * 3;
 
             positions[k] =
-                originalPositions[k] =
-                point.x;
+                basePositions[k] =
+                p.x;
 
             positions[k + 1] =
-                originalPositions[k + 1] =
-                point.y;
+                basePositions[k + 1] =
+                p.y;
 
             positions[k + 2] =
-                originalPositions[k + 2] =
-                point.z;
+                basePositions[k + 2] =
+                p.z;
 
             colors[k] =
                 color.r;
@@ -262,9 +268,9 @@
         }
     }
 
-    /* ---------------------------------------------------------
-       Triangle topology
-       --------------------------------------------------------- */
+    /* =========================================================
+       TRIANGLES
+       ========================================================= */
 
     for (let i = 0; i < COLS - 1; i++) {
 
@@ -277,10 +283,13 @@
                 (i + 1) * ROWS + j;
 
             const c =
-                (i + 1) * ROWS + j + 1;
+                (i + 1) *
+                ROWS +
+                j + 1;
 
             const d =
-                i * ROWS + j + 1;
+                i * ROWS +
+                j + 1;
 
             indices.push(
                 a, b, d,
@@ -308,11 +317,13 @@
         )
     );
 
-    geometry.setIndex(indices);
+    geometry.setIndex(
+        indices
+    );
 
-    /* ---------------------------------------------------------
-       Very subtle manifold surface
-       --------------------------------------------------------- */
+    /* =========================================================
+       SURFACE
+       ========================================================= */
 
     const surfaceMaterial =
         new THREE.MeshBasicMaterial({
@@ -331,96 +342,116 @@
 
     manifold.add(surface);
 
-    /* ---------------------------------------------------------
-       Wireframe
-       --------------------------------------------------------- */
+    /* =========================================================
+       LIVE WIREFRAME
+       =========================================================
+
+       IMPORTANT:
+       Do NOT use THREE.WireframeGeometry here.
+
+       We create the wireframe ourselves so that the
+       exact same animated vertices are used.
+       ========================================================= */
+
+    const wirePositions = [];
+
+    function addLine(a, b) {
+
+        wirePositions.push(
+            a.x, a.y, a.z,
+            b.x, b.y, b.z
+        );
+    }
+
+    /*
+     * Horizontal lines.
+     */
+
+    for (let i = 0; i < COLS; i++) {
+
+        for (let j = 0; j < ROWS - 1; j++) {
+
+            const a =
+                i * ROWS + j;
+
+            const b =
+                i * ROWS + j + 1;
+
+            wirePositions.push(
+                positions[a * 3],
+                positions[a * 3 + 1],
+                positions[a * 3 + 2],
+
+                positions[b * 3],
+                positions[b * 3 + 1],
+                positions[b * 3 + 2]
+            );
+        }
+    }
+
+    /*
+     * Vertical lines.
+     */
+
+    for (let i = 0; i < COLS - 1; i++) {
+
+        for (let j = 0; j < ROWS; j++) {
+
+            const a =
+                i * ROWS + j;
+
+            const b =
+                (i + 1) * ROWS + j;
+
+            wirePositions.push(
+                positions[a * 3],
+                positions[a * 3 + 1],
+                positions[a * 3 + 2],
+
+                positions[b * 3],
+                positions[b * 3 + 1],
+                positions[b * 3 + 2]
+            );
+        }
+    }
+
+    const wireArray =
+        new Float32Array(
+            wirePositions
+        );
 
     const wireGeometry =
-        new THREE.WireframeGeometry(
-            geometry
-        );
+        new THREE.BufferGeometry();
+
+    wireGeometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(
+            wireArray,
+            3
+        )
+    );
 
     const wireMaterial =
         new THREE.LineBasicMaterial({
-            vertexColors: true,
+            color: 0x59636d,
             transparent: true,
-            opacity: 0.14,
+            opacity: 0.16,
             depthWrite: false
         });
 
-    const wire =
+    const wireframe =
         new THREE.LineSegments(
             wireGeometry,
             wireMaterial
         );
 
-    manifold.add(wire);
+    manifold.add(
+        wireframe
+    );
 
-    /* ---------------------------------------------------------
-       Sparse longitudinal guide curves
-       --------------------------------------------------------- */
-
-    const guideGroup =
-        new THREE.Group();
-
-    manifold.add(guideGroup);
-
-    function createGuide(v, opacity) {
-
-        const points = [];
-
-        for (let i = 0; i < 120; i++) {
-
-            const u =
-                -WIDTH / 2 +
-                WIDTH * i / 119;
-
-            const p =
-                manifoldSurface(
-                    u,
-                    v
-                );
-
-            points.push(
-                new THREE.Vector3(
-                    p.x,
-                    p.y,
-                    p.z + 0.035
-                )
-            );
-        }
-
-        const guideGeometry =
-            new THREE.BufferGeometry()
-                .setFromPoints(points);
-
-        const guideMaterial =
-            new THREE.LineBasicMaterial({
-                color: 0x66717b,
-                transparent: true,
-                opacity: opacity,
-                depthWrite: false
-            });
-
-        guideGroup.add(
-            new THREE.Line(
-                guideGeometry,
-                guideMaterial
-            )
-        );
-    }
-
-    /*
-     * Only three guide curves.
-     * This keeps the background sparse.
-     */
-    createGuide(-2.15, 0.10);
-    createGuide(0, 0.12);
-    createGuide(2.15, 0.10);
-
-    /* ---------------------------------------------------------
-       Mouse state
-       --------------------------------------------------------- */
+    /* =========================================================
+       MOUSE
+       ========================================================= */
 
     const mouse =
         new THREE.Vector2(
@@ -428,42 +459,23 @@
             0
         );
 
-    const smoothMouse =
+    const targetMouse =
         new THREE.Vector2(
             0,
             0
         );
-
-    /*
-     * Mouse position in manifold coordinates.
-     */
-    const manifoldMouse =
-        new THREE.Vector2(
-            0,
-            0
-        );
-
-    const smoothManifoldMouse =
-        new THREE.Vector2(
-            0,
-            0
-        );
-
-    /* ---------------------------------------------------------
-       Mouse movement
-       --------------------------------------------------------- */
 
     window.addEventListener(
-        "pointermove",
+        "mousemove",
         function (event) {
 
-            mouse.x =
+            targetMouse.x =
                 (
                     event.clientX /
                     window.innerWidth
                 ) * 2 - 1;
 
-            mouse.y =
+            targetMouse.y =
                 -(
                     event.clientY /
                     window.innerHeight
@@ -475,9 +487,9 @@
         }
     );
 
-    /* ---------------------------------------------------------
-       Resize
-       --------------------------------------------------------- */
+    /* =========================================================
+       RESIZE
+       ========================================================= */
 
     function resize() {
 
@@ -499,15 +511,14 @@
         );
 
         /*
-         * Make the manifold intentionally wider
-         * than the viewport so there are no empty
-         * regions at the sides.
+         * Oversize the manifold so that
+         * it fills the entire screen.
          */
 
         const scale =
             width < 600
-                ? 0.86
-                : 1.05;
+                ? 0.90
+                : 1.10;
 
         manifold.scale.set(
             scale,
@@ -523,9 +534,9 @@
 
     resize();
 
-    /* ---------------------------------------------------------
-       Animation
-       --------------------------------------------------------- */
+    /* =========================================================
+       ANIMATION
+       ========================================================= */
 
     const clock =
         new THREE.Clock();
@@ -539,127 +550,115 @@
         const time =
             clock.getElapsedTime();
 
-        /* ---------------------------------------------
+        /* -----------------------------------------------------
            Smooth mouse
-           --------------------------------------------- */
+           ----------------------------------------------------- */
 
-        smoothMouse.lerp(
-            mouse,
-            0.045
-        );
-
-        /* ---------------------------------------------
-           Mouse → manifold coordinates
-           --------------------------------------------- */
-
-        manifoldMouse.set(
-            smoothMouse.x *
-                (WIDTH * 0.48),
-
-            smoothMouse.y *
-                (DEPTH * 0.45)
-        );
-
-        smoothManifoldMouse.lerp(
-            manifoldMouse,
+        mouse.lerp(
+            targetMouse,
             0.055
         );
 
-        /* ---------------------------------------------
-           DEFAULT CONTINUOUS ROTATION
-           ---------------------------------------------
+        /* -----------------------------------------------------
+           CONTINUOUS DEFAULT MOTION
+           ----------------------------------------------------- */
 
-           The manifold moves even when the mouse
-           is completely stationary.
-        */
-
-        const idleRotationY =
+        const idleY =
             Math.sin(
-                time * 0.18
-            ) * 0.085;
+                time * 0.24
+            ) * 0.17;
 
-        const idleRotationZ =
+        const idleX =
             Math.sin(
-                time * 0.13
-            ) * 0.018;
+                time * 0.17
+            ) * 0.025;
 
-        const idleRotationX =
-            Math.sin(
-                time * 0.11
-            ) * 0.014;
+        const idleZ =
+            Math.cos(
+                time * 0.15
+            ) * 0.025;
 
-        /* ---------------------------------------------
-           MOUSE CONTROLLED ROTATION
-           --------------------------------------------- */
+        /* -----------------------------------------------------
+           MOUSE ROTATION
 
-        const mouseRotationY =
-            smoothMouse.x *
-            0.20;
+           This is intentionally strong enough to be obvious.
+           ----------------------------------------------------- */
 
-        const mouseRotationX =
-            smoothMouse.y *
-            0.085;
+        const mouseY =
+            mouse.x * 0.38;
 
-        const mouseRotationZ =
-            smoothMouse.x *
-            0.035;
+        const mouseX =
+            mouse.y * 0.16;
+
+        const mouseZ =
+            mouse.x * 0.07;
 
         manifold.rotation.y =
-            idleRotationY +
-            mouseRotationY;
+            idleY +
+            mouseY;
 
         manifold.rotation.x =
-            -0.48 +
-            idleRotationX +
-            mouseRotationX;
+            -0.45 +
+            idleX +
+            mouseX;
 
         manifold.rotation.z =
-            -0.025 +
-            idleRotationZ +
-            mouseRotationZ;
+            idleZ +
+            mouseZ;
 
-        /* ---------------------------------------------
-           Gentle horizontal drift
-           --------------------------------------------- */
+        /* -----------------------------------------------------
+           DEFAULT TRANSLATION
+           ----------------------------------------------------- */
 
         manifold.position.x =
             Math.sin(
-                time * 0.10
-            ) * 0.18;
+                time * 0.12
+            ) * 0.30;
 
         manifold.position.y =
-            -0.20 +
+            -0.25 +
             Math.cos(
-                time * 0.13
-            ) * 0.035;
+                time * 0.16
+            ) * 0.045;
 
-        /* ---------------------------------------------
-           Local cursor deformation
-           --------------------------------------------- */
+        /* -----------------------------------------------------
+           MOUSE-DRIVEN SURFACE WARP
+           ----------------------------------------------------- */
 
-        const pos =
-            geometry.attributes
-                .position.array;
+        const px =
+            mouse.x *
+            WIDTH *
+            0.48;
+
+        const py =
+            mouse.y *
+            DEPTH *
+            0.45;
+
+        /*
+         * First update the manifold vertices.
+         */
 
         for (
             let i = 0;
-            i < pos.length;
-            i += 3
+            i < vertexCount;
+            i++
         ) {
 
+            const k =
+                i * 3;
+
             const x =
-                originalPositions[i];
+                basePositions[k];
 
             const y =
-                originalPositions[i + 1];
+                basePositions[k + 1];
 
             const dx =
-                x -
-                smoothManifoldMouse.x;
+                x - px;
 
             const dy =
-                y -
-                smoothManifoldMouse.y;
+                y - py;
 
             const distance =
                 Math.sqrt(
@@ -668,65 +667,185 @@
                 );
 
             /*
-             * Broad influence area.
+             * Large interaction radius.
              */
+
             const influence =
                 Math.exp(
                     -(
                         distance *
                         distance
-                    ) / 3.8
+                    ) / 4.0
                 );
 
             /*
-             * Moving ripple.
+             * Strong travelling wave.
              */
+
             const ripple =
                 Math.sin(
-                    distance * 2.1 -
-                    time * 2.5
-                ) *
-                0.075 *
+                    distance * 2.7 -
+                    time * 3.2
+                )
+                *
+                0.16
+                *
                 influence;
 
             /*
-             * Lift toward the cursor.
+             * Strong upward deformation.
              */
+
             const lift =
-                0.30 *
-                influence +
+                0.48 *
+                influence
+                +
                 ripple;
 
             /*
-             * Slight sideways displacement
-             * makes the surface feel alive.
+             * Small horizontal displacement.
              */
-            const displacement =
-                0.035 *
+
+            const sideShift =
+                0.10 *
                 influence;
 
-            pos[i] =
+            positions[k] =
                 x +
                 dx *
-                displacement;
+                sideShift;
 
-            pos[i + 1] =
+            positions[k + 1] =
                 y +
                 dy *
-                displacement;
+                sideShift;
 
-            pos[i + 2] =
-                originalPositions[i + 2] +
+            positions[k + 2] =
+                basePositions[k + 2]
+                +
                 lift;
         }
 
-        geometry.attributes
+        /* -----------------------------------------------------
+           UPDATE SURFACE
+           ----------------------------------------------------- */
+
+        geometry
+            .attributes
             .position
             .needsUpdate = true;
 
-        /* ---------------------------------------------
-           Render
-           --------------------------------------------- */
+        /* -----------------------------------------------------
+           UPDATE WIREFRAME
+
+           The wireframe receives the exact same animated
+           positions as the surface.
+           ----------------------------------------------------- */
+
+        let wp = 0;
+
+        /* Horizontal */
+
+        for (
+            let i = 0;
+            i < COLS;
+            i++
+        ) {
+
+            for (
+                let j = 0;
+                j < ROWS - 1;
+                j++
+            ) {
+
+                const a =
+                    i * ROWS + j;
+
+                const b =
+                    i * ROWS +
+                    j + 1;
+
+                const ak =
+                    a * 3;
+
+                const bk =
+                    b * 3;
+
+                wireArray[wp++] =
+                    positions[ak];
+
+                wireArray[wp++] =
+                    positions[ak + 1];
+
+                wireArray[wp++] =
+                    positions[ak + 2];
+
+                wireArray[wp++] =
+                    positions[bk];
+
+                wireArray[wp++] =
+                    positions[bk + 1];
+
+                wireArray[wp++] =
+                    positions[bk + 2];
+            }
+        }
+
+        /* Vertical */
+
+        for (
+            let i = 0;
+            i < COLS - 1;
+            i++
+        ) {
+
+            for (
+                let j = 0;
+                j < ROWS;
+                j++
+            ) {
+
+                const a =
+                    i * ROWS + j;
+
+                const b =
+                    (i + 1) *
+                    ROWS + j;
+
+                const ak =
+                    a * 3;
+
+                const bk =
+                    b * 3;
+
+                wireArray[wp++] =
+                    positions[ak];
+
+                wireArray[wp++] =
+                    positions[ak + 1];
+
+                wireArray[wp++] =
+                    positions[ak + 2];
+
+                wireArray[wp++] =
+                    positions[bk];
+
+                wireArray[wp++] =
+                    positions[bk + 1];
+
+                wireArray[wp++] =
+                    positions[bk + 2];
+            }
+        }
+
+        wireGeometry
+            .attributes
+            .position
+            .needsUpdate = true;
+
+        /* -----------------------------------------------------
+           RENDER
+           ----------------------------------------------------- */
 
         renderer.render(
             scene,
@@ -734,25 +853,6 @@
         );
     }
 
-    /* ---------------------------------------------------------
-       Reduced motion
-       --------------------------------------------------------- */
-
-    const reducedMotion =
-        window.matchMedia(
-            "(prefers-reduced-motion: reduce)"
-        );
-
-    if (reducedMotion.matches) {
-
-        renderer.render(
-            scene,
-            camera
-        );
-
-    } else {
-
-        animate();
-    }
+    animate();
 
 })();
