@@ -7,7 +7,7 @@
 
 /* Interactive latent-manifold background */
 html {
-    background: #f4eddf;
+    background: #f3ecdf;
     min-height: 100%;
 }
 
@@ -18,9 +18,9 @@ html {
     overflow: hidden;
     pointer-events: none;
     background:
-        radial-gradient(circle at 18% 45%, rgba(104, 137, 166, 0.10), transparent 30%),
-        radial-gradient(circle at 78% 56%, rgba(196, 137, 83, 0.08), transparent 32%),
-        #f4eddf;
+        radial-gradient(ellipse at 12% 50%, rgba(76, 125, 165, 0.075), transparent 38%),
+        radial-gradient(ellipse at 88% 52%, rgba(194, 139, 82, 0.065), transparent 40%),
+        linear-gradient(180deg, #f7f1e7 0%, #f1e9da 100%);
 }
 
 #manifold-bg::after {
@@ -28,10 +28,9 @@ html {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background-image: radial-gradient(rgba(78, 64, 48, 0.055) 0.65px, transparent 0.65px);
-    background-size: 4px 4px;
-    opacity: 0.24;
-    mix-blend-mode: multiply;
+    background:
+        radial-gradient(ellipse at center, transparent 45%, rgba(76, 62, 46, 0.035) 100%);
+    opacity: 0.8;
 }
 
 #manifold-bg canvas {
@@ -80,7 +79,7 @@ body {
 
 /* Navigation */
 .navbar {
-    background-color: rgba(244, 237, 223, 0.82);
+    background-color: rgba(244, 237, 223, 0.72);
     border-bottom: 1px solid rgba(75, 67, 57, 0.18);
     padding: 1rem 0;
     position: sticky;
@@ -298,7 +297,7 @@ body {
     opacity: 0.8;
 }
 
-/* News Items (for dedicated news page) */
+/* News Items */
 .news-item {
     display: flex;
     flex-direction: column;
@@ -595,7 +594,6 @@ body {
         height: 200px;
         object-fit: contain;
     }
-
 
     .cv-map {
         grid-template-columns: 1fr;
