@@ -22,42 +22,6 @@
     display: none !important;
 }
 
-.explorer-modes {
-    position: fixed;
-    z-index: 10;
-    right: 20px;
-    bottom: 20px;
-    display: flex;
-    gap: 6px;
-    padding: 5px;
-    border: 1px solid #3e3e3e;
-    border-radius: 99px;
-    background: rgba(30, 30, 30, 0.72);
-    backdrop-filter: blur(10px);
-}
-
-.explorer-mode {
-    padding: 7px 14px;
-    border: none;
-    border-radius: 99px;
-    background: transparent;
-    color: #a0a0a0;
-    font-family: 'Share Tech Mono', 'Consolas', monospace;
-    font-size: 0.72rem;
-    letter-spacing: 0.03em;
-    cursor: pointer;
-    transition: all 0.25s ease;
-}
-
-.explorer-mode:hover {
-    color: #ffffff;
-}
-
-.explorer-mode.active {
-    color: #1e1e1e;
-    background: #4ec9b0;
-}
-
 html {
     background-color: #1e1e1e !important;
     min-height: 100%;
