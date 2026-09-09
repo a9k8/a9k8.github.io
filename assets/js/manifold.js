@@ -45,77 +45,114 @@
   renderer.domElement.style.zIndex = "-1";
 
   // ------------------------------------------------------------
-  // Manifold parameters
+  // Pseudosphere parameters
+  //
+  // The pseudosphere (tractricoid) is the classic 3D embedding of a
+  // patch of the hyperbolic plane: a surface of revolution with
+  // constant negative Gaussian curvature everywhere. Parametrized by
+  // u (along the horn, 0 = wide rim, U_MAX = tapered tip) and v
+  // (angle around the axis):
+  //
+  //   r(u) = sech(u)            radius at u
+  //   h(u) = u - tanh(u)        axial position at u
+  //   x = r(u) * cos(v)
+  //   y = h(u)
+  //   z = r(u) * sin(v)
   // ------------------------------------------------------------
 
-  const SEG_X = 120;
-  const SEG_Y = 68;
+  const U_SEGMENTS = 90;
+  const V_SEGMENTS = 56;
+  const U_MAX = 3.3;
 
-  // Extra size beyond the exact camera frustum so that the slow
-  // rotation and mouse tilt never reveal an edge of the mesh.
-  const FILL_MARGIN = 1.45;
+  const ROWS = U_SEGMENTS + 1;
+  const COLS = V_SEGMENTS + 1; // last column duplicates column 0 (seam) for clean UVs
 
-  // How pronounced the saddle (hyperbolic paraboloid) curvature is.
-  const CURVE_STRENGTH = 0.85;
+  const H_MAX = U_MAX - Math.tanh(U_MAX);
 
-  let WIDTH = 1;
-  let HEIGHT = 1;
+  // How tall (in world units) the whole horn should be; recomputed
+  // per viewport so it stays a prominent, well-framed centerpiece.
+  const TARGET_HEIGHT_FRACTION = 0.85;
 
-  function computeFillSize() {
+  let SCALE = 1;
+
+  function computeScale() {
     const vFov = THREE.MathUtils.degToRad(camera.fov);
     const visibleHeight =
       2 * Math.tan(vFov / 2) * Math.abs(camera.position.z);
 
-    const visibleWidth = visibleHeight * camera.aspect;
+    return (visibleHeight * TARGET_HEIGHT_FRACTION) / H_MAX;
+  }
 
-    return {
-      width: visibleWidth * FILL_MARGIN,
-      height: visibleHeight * FILL_MARGIN
-    };
+  // Static (u, v) parameters per vertex -- the undeformed lattice.
+  const paramU = new Float32Array(ROWS * COLS);
+  const paramV = new Float32Array(ROWS * COLS);
+
+  for (let i = 0; i < ROWS; i++) {
+    const u = (i / U_SEGMENTS) * U_MAX;
+
+    for (let j = 0; j < COLS; j++) {
+      const v = ((j % V_SEGMENTS) / V_SEGMENTS) * Math.PI * 2;
+
+      const idx = i * COLS + j;
+      paramU[idx] = u;
+      paramV[idx] = v;
+    }
   }
 
   // ------------------------------------------------------------
-  // Create manifold
+  // Geometry: a real surface-of-revolution mesh, not a flat grid.
   // ------------------------------------------------------------
+
+  const vertexCount = ROWS * COLS;
+  const positionArray = new Float32Array(vertexCount * 3);
+  const uvArray = new Float32Array(vertexCount * 2);
+
+  for (let i = 0; i < ROWS; i++) {
+    for (let j = 0; j < COLS; j++) {
+      const idx = i * COLS + j;
+      uvArray[idx * 2] = i / U_SEGMENTS;
+      uvArray[idx * 2 + 1] = j / V_SEGMENTS;
+    }
+  }
+
+  const indices = [];
+  for (let i = 0; i < U_SEGMENTS; i++) {
+    for (let j = 0; j < V_SEGMENTS; j++) {
+      const a = i * COLS + j;
+      const b = i * COLS + j + 1;
+      const c = (i + 1) * COLS + j;
+      const d = (i + 1) * COLS + j + 1;
+
+      indices.push(a, b, d, a, d, c);
+    }
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(positionArray, 3)
+  );
+  geometry.setAttribute("uv", new THREE.BufferAttribute(uvArray, 2));
+  geometry.setIndex(indices);
 
   const material = new THREE.MeshBasicMaterial({
     color: 0x5264a8,
     transparent: true,
-    opacity: 0.045,
+    opacity: 0.05,
     side: THREE.DoubleSide,
     wireframe: false
   });
 
-  const surface = new THREE.Mesh(new THREE.BufferGeometry(), material);
-
-  surface.rotation.x = -0.22;
+  const surface = new THREE.Mesh(geometry, material);
 
   scene.add(surface);
 
-  let positions = null;
-  let basePositions = null;
-
-  function rebuildSurfaceGeometry(width, height) {
-    const geometry = new THREE.PlaneGeometry(
-      width,
-      height,
-      SEG_X,
-      SEG_Y
-    );
-
-    positions = geometry.attributes.position;
-    basePositions = new Float32Array(positions.array);
-
-    surface.geometry.dispose();
-    surface.geometry = geometry;
-  }
-
   // ------------------------------------------------------------
-  // Live wireframe
+  // Live wireframe (same deformed vertices, drawn as line segments)
   // ------------------------------------------------------------
 
-  const baseWireOpacity = 0.22;
-  const glowWireOpacity = 0.5;
+  const baseWireOpacity = 0.24;
+  const glowWireOpacity = 0.55;
 
   const baseColor = new THREE.Color(0x5868a0);
   const glowColor = new THREE.Color(0x8fb2ff);
@@ -128,29 +165,21 @@
 
   const wirePositions = [];
 
-  // Horizontal lines
-  for (let y = 0; y <= SEG_Y; y++) {
-    for (let x = 0; x < SEG_X; x++) {
-      const a = y * (SEG_X + 1) + x;
-      const b = a + 1;
-
-      wirePositions.push(a, b);
+  // Circumferential rings (v-direction).
+  for (let i = 0; i < ROWS; i++) {
+    for (let j = 0; j < V_SEGMENTS; j++) {
+      wirePositions.push(i * COLS + j, i * COLS + j + 1);
     }
   }
 
-  // Vertical lines
-  for (let y = 0; y < SEG_Y; y++) {
-    for (let x = 0; x <= SEG_X; x++) {
-      const a = y * (SEG_X + 1) + x;
-      const b = a + SEG_X + 1;
-
-      wirePositions.push(a, b);
+  // Longitudinal ribs (u-direction).
+  for (let j = 0; j < COLS; j++) {
+    for (let i = 0; i < U_SEGMENTS; i++) {
+      wirePositions.push(i * COLS + j, (i + 1) * COLS + j);
     }
   }
 
-  const wireVertexCount = wirePositions.length;
-
-  const wireArray = new Float32Array(wireVertexCount * 3);
+  const wireArray = new Float32Array(wirePositions.length * 3);
 
   const wireGeometry = new THREE.BufferGeometry();
   wireGeometry.setAttribute(
@@ -158,12 +187,7 @@
     new THREE.BufferAttribute(wireArray, 3)
   );
 
-  const wireframe = new THREE.LineSegments(
-    wireGeometry,
-    wireMaterial
-  );
-
-  wireframe.rotation.copy(surface.rotation);
+  const wireframe = new THREE.LineSegments(wireGeometry, wireMaterial);
 
   scene.add(wireframe);
 
@@ -177,11 +201,8 @@
   let mouseActive = false;
 
   window.addEventListener("mousemove", (event) => {
-    targetMouse.x =
-      (event.clientX / window.innerWidth) * 2 - 1;
-
-    targetMouse.y =
-      -(event.clientY / window.innerHeight) * 2 + 1;
+    targetMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    targetMouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
     mouseActive = true;
   });
@@ -195,64 +216,43 @@
   });
 
   // ------------------------------------------------------------
-  // Ripple system: a small 2D wave-equation fluid grid, the same
-  // technique water-ripple plugins (e.g. jquery.ripples) use on a
-  // WebGL texture -- height + velocity fields updated with a
-  // discrete Laplacian, sampled by the mesh instead of a shader.
+  // Ripple system: a 2D wave-equation fluid grid living directly on
+  // the (u, v) parameter space of the horn -- same technique
+  // water-ripple plugins (e.g. jquery.ripples) run on a flat WebGL
+  // texture, except here the domain is curved into 3D by the
+  // pseudosphere formulas above. v wraps around (it's an angle);
+  // u is clamped (the horn has two open, non-periodic ends.
   // ------------------------------------------------------------
 
-  const CELL_SIZE = 0.25;
   const WAVE_SPREAD = 2.0;
   const DAMPING = 0.985;
-  const DROP_RADIUS = 1.1;
+  const DROP_RADIUS_CELLS = 4.2;
   const DROP_STRENGTH = 1.1;
-  const RIPPLE_Z_SCALE = 0.32;
+  const RIPPLE_RADIAL_SCALE = 0.22;
 
-  let gridW = 1;
-  let gridH = 1;
+  const fluidSize = ROWS * V_SEGMENTS;
+  let heightA = new Float32Array(fluidSize);
+  let velocityA = new Float32Array(fluidSize);
+  let heightB = new Float32Array(fluidSize);
+  let velocityB = new Float32Array(fluidSize);
 
-  let heightA = new Float32Array(1);
-  let velocityA = new Float32Array(1);
-  let heightB = new Float32Array(1);
-  let velocityB = new Float32Array(1);
+  function fluidAt(field, row, col) {
+    const r = row < 0 ? 0 : row >= ROWS ? ROWS - 1 : row;
+    const c = ((col % V_SEGMENTS) + V_SEGMENTS) % V_SEGMENTS;
 
-  function rebuildFluidGrid(width, height) {
-    gridW = Math.max(4, Math.round(width / CELL_SIZE));
-    gridH = Math.max(4, Math.round(height / CELL_SIZE));
-
-    const size = gridW * gridH;
-
-    heightA = new Float32Array(size);
-    velocityA = new Float32Array(size);
-    heightB = new Float32Array(size);
-    velocityB = new Float32Array(size);
-  }
-
-  function cellAt(field, gx, gy) {
-    const cx = gx < 0 ? 0 : gx >= gridW ? gridW - 1 : gx;
-    const cy = gy < 0 ? 0 : gy >= gridH ? gridH - 1 : gy;
-
-    return field[cy * gridW + cx];
-  }
-
-  // World-space (mesh-local) coordinates to fractional grid coordinates.
-  function worldToGrid(x, y) {
-    return {
-      gx: (x / WIDTH + 0.5) * (gridW - 1),
-      gy: (y / HEIGHT + 0.5) * (gridH - 1)
-    };
+    return field[r * V_SEGMENTS + c];
   }
 
   function stepFluid() {
-    for (let gy = 0; gy < gridH; gy++) {
-      for (let gx = 0; gx < gridW; gx++) {
-        const i = gy * gridW + gx;
+    for (let row = 0; row < ROWS; row++) {
+      for (let col = 0; col < V_SEGMENTS; col++) {
+        const i = row * V_SEGMENTS + col;
 
         const average =
-          (cellAt(heightA, gx - 1, gy) +
-            cellAt(heightA, gx + 1, gy) +
-            cellAt(heightA, gx, gy - 1) +
-            cellAt(heightA, gx, gy + 1)) *
+          (fluidAt(heightA, row - 1, col) +
+            fluidAt(heightA, row + 1, col) +
+            fluidAt(heightA, row, col - 1) +
+            fluidAt(heightA, row, col + 1)) *
           0.25;
 
         let vel = velocityA[i] + (average - heightA[i]) * WAVE_SPREAD;
@@ -273,86 +273,32 @@
   }
 
   // Raised-cosine bump, same shape jquery.ripples uses for a drop.
-  function injectDrop(x, y, radius, strength) {
-    const { gx: cgx, gy: cgy } = worldToGrid(x, y);
-    const cellRadius = radius / CELL_SIZE;
+  // (uNorm, vNorm) are fractional grid coordinates in [0, 1).
+  function injectDrop(uNorm, vNorm, radiusCells, strength) {
+    const cgu = uNorm * U_SEGMENTS;
+    const cgv = vNorm * V_SEGMENTS;
 
-    const minGx = Math.max(0, Math.floor(cgx - cellRadius));
-    const maxGx = Math.min(gridW - 1, Math.ceil(cgx + cellRadius));
-    const minGy = Math.max(0, Math.floor(cgy - cellRadius));
-    const maxGy = Math.min(gridH - 1, Math.ceil(cgy + cellRadius));
+    const minRow = Math.max(0, Math.floor(cgu - radiusCells));
+    const maxRow = Math.min(ROWS - 1, Math.ceil(cgu + radiusCells));
 
-    for (let gy = minGy; gy <= maxGy; gy++) {
-      for (let gx = minGx; gx <= maxGx; gx++) {
-        const dx = gx - cgx;
-        const dy = gy - cgy;
+    for (let row = minRow; row <= maxRow; row++) {
+      for (
+        let col = Math.floor(cgv - radiusCells);
+        col <= Math.ceil(cgv + radiusCells);
+        col++
+      ) {
+        const du = row - cgu;
+        const dv = col - cgv;
 
-        const dist = Math.sqrt(dx * dx + dy * dy) / cellRadius;
+        const dist = Math.sqrt(du * du + dv * dv) / radiusCells;
 
         if (dist > 1) continue;
 
         const drop = 0.5 - Math.cos(dist * Math.PI) * 0.5;
+        const wrappedCol = ((col % V_SEGMENTS) + V_SEGMENTS) % V_SEGMENTS;
 
-        heightA[gy * gridW + gx] += drop * strength;
+        heightA[row * V_SEGMENTS + wrappedCol] += drop * strength;
       }
-    }
-  }
-
-  // Bilinear-sample the height field at a world-space coordinate.
-  function sampleRipple(x, y) {
-    const { gx, gy } = worldToGrid(x, y);
-
-    const gx0 = Math.floor(gx);
-    const gy0 = Math.floor(gy);
-
-    const tx = gx - gx0;
-    const ty = gy - gy0;
-
-    const h00 = cellAt(heightA, gx0, gy0);
-    const h10 = cellAt(heightA, gx0 + 1, gy0);
-    const h01 = cellAt(heightA, gx0, gy0 + 1);
-    const h11 = cellAt(heightA, gx0 + 1, gy0 + 1);
-
-    const top = h00 + (h10 - h00) * tx;
-    const bottom = h01 + (h11 - h01) * tx;
-
-    return top + (bottom - top) * ty;
-  }
-
-  let lastDropX = 0;
-  let lastDropY = 0;
-  let dropTimer = 0;
-
-  function mouseWorldPosition() {
-    // The mesh extends past the camera frustum by FILL_MARGIN, so
-    // screen-space NDC only covers the inner 1 / FILL_MARGIN of it.
-    return {
-      x: (targetMouse.x * WIDTH) / (2 * FILL_MARGIN),
-      y: (targetMouse.y * HEIGHT) / (2 * FILL_MARGIN)
-    };
-  }
-
-  function updateDropInjection(delta) {
-    if (!mouseActive) {
-      dropTimer = 0;
-      return;
-    }
-
-    dropTimer += delta;
-
-    const { x, y } = mouseWorldPosition();
-
-    const dx = x - lastDropX;
-    const dy = y - lastDropY;
-
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    if (distance > CELL_SIZE * 0.8 && dropTimer > 0.04) {
-      injectDrop(x, y, DROP_RADIUS, DROP_STRENGTH);
-
-      lastDropX = x;
-      lastDropY = y;
-      dropTimer = 0;
     }
   }
 
@@ -368,90 +314,50 @@
   }
 
   // ------------------------------------------------------------
-  // Surface deformation
+  // Mouse picking: raycast against the real (rotating) mesh so
+  // ripples land exactly where the cursor points, regardless of
+  // how the horn is currently oriented.
   // ------------------------------------------------------------
 
-  function deformVertex(x, y, time) {
-    let z = 0;
+  const raycaster = new THREE.Raycaster();
 
-    // ----------------------------------------------------------
-    // Saddle curvature: makes this an actual curved manifold
-    // instead of a flat plane with waves on top.
-    // ----------------------------------------------------------
+  let lastDropU = -1;
+  let lastDropV = -1;
+  let dropTimer = 0;
 
-    const nx = x / (WIDTH * 0.5);
-    const ny = y / (HEIGHT * 0.5);
-
-    z += (nx * nx - ny * ny) * CURVE_STRENGTH;
-
-    // ----------------------------------------------------------
-    // Base manifold waves
-    // ----------------------------------------------------------
-
-    const baseWave =
-      Math.sin(x * 1.15 + time * 0.35) *
-      0.08 *
-      Math.exp(-Math.abs(y) * 0.25);
-
-    const secondaryWave =
-      Math.sin(y * 2.2 - time * 0.25) *
-      0.035;
-
-    z += baseWave + secondaryWave;
-
-    // ----------------------------------------------------------
-    // Fluid ripples
-    // ----------------------------------------------------------
-
-    z += sampleRipple(x, y) * RIPPLE_Z_SCALE;
-
-    return z;
-  }
-
-  // ------------------------------------------------------------
-  // Update geometry
-  // ------------------------------------------------------------
-
-  function updateGeometry(time) {
-    for (let i = 0; i < positions.count; i++) {
-      const baseIndex = i * 3;
-
-      const x = basePositions[baseIndex];
-      const y = basePositions[baseIndex + 1];
-
-      const z = deformVertex(x, y, time);
-
-      positions.array[baseIndex] = x;
-      positions.array[baseIndex + 1] = y;
-      positions.array[baseIndex + 2] = z;
+  function updateDropInjection(delta) {
+    if (!mouseActive) {
+      dropTimer = 0;
+      return;
     }
 
-    positions.needsUpdate = true;
-    surface.geometry.computeBoundingSphere();
+    dropTimer += delta;
+    if (dropTimer < 0.04) return;
+    dropTimer = 0;
 
-    // ----------------------------------------------------------
-    // Update wireframe from the SAME deformed surface
-    // ----------------------------------------------------------
+    raycaster.setFromCamera(targetMouse, camera);
+    const hits = raycaster.intersectObject(surface, false);
 
-    let w = 0;
+    if (!hits.length || !hits[0].uv) return;
 
-    for (let i = 0; i < wirePositions.length; i++) {
-      const vertexIndex = wirePositions[i];
+    const uNorm = hits[0].uv.x;
+    const vNorm = hits[0].uv.y;
 
-      const baseIndex = vertexIndex * 3;
+    if (lastDropU >= 0) {
+      const du = uNorm - lastDropU;
+      let dv = vNorm - lastDropV;
+      if (dv > 0.5) dv -= 1;
+      if (dv < -0.5) dv += 1;
 
-      const x = basePositions[baseIndex];
-      const y = basePositions[baseIndex + 1];
+      const distance = Math.sqrt(du * du + dv * dv);
 
-      const z = deformVertex(x, y, time);
-
-      wireArray[w++] = x;
-      wireArray[w++] = y;
-      wireArray[w++] = z + 0.002;
+      if (distance < 0.012) return;
     }
 
-    wireGeometry.attributes.position.needsUpdate = true;
-    wireGeometry.computeBoundingSphere();
+    injectDrop(uNorm, vNorm, DROP_RADIUS_CELLS, DROP_STRENGTH);
+
+    lastDropU = uNorm;
+    lastDropV = vNorm;
   }
 
   // ------------------------------------------------------------
@@ -460,6 +366,52 @@
 
   const clock = new THREE.Clock();
   const tmpColor = new THREE.Color();
+
+  function sech(x) {
+    return 1 / Math.cosh(x);
+  }
+
+  function computeVertices(time) {
+    const hOffset = H_MAX / 2;
+
+    for (let i = 0; i < ROWS; i++) {
+      for (let j = 0; j < COLS; j++) {
+        const idx = i * COLS + j;
+
+        const u = paramU[idx];
+        const v = paramV[idx];
+
+        const simCol = j % V_SEGMENTS;
+        const ripple = heightA[i * V_SEGMENTS + simCol];
+
+        const liveWave =
+          0.02 * Math.sin(u * 3.5 + time * 0.4) * Math.cos(v * 3);
+
+        const radiusMod = 1 + liveWave + ripple * RIPPLE_RADIAL_SCALE;
+
+        const r = sech(u) * SCALE * radiusMod;
+        const h = (u - Math.tanh(u) - hOffset) * SCALE;
+
+        positionArray[idx * 3] = r * Math.cos(v);
+        positionArray[idx * 3 + 1] = h;
+        positionArray[idx * 3 + 2] = r * Math.sin(v);
+      }
+    }
+
+    geometry.attributes.position.needsUpdate = true;
+    geometry.computeBoundingSphere();
+
+    for (let k = 0; k < wirePositions.length; k++) {
+      const vi = wirePositions[k];
+
+      wireArray[k * 3] = positionArray[vi * 3];
+      wireArray[k * 3 + 1] = positionArray[vi * 3 + 1];
+      wireArray[k * 3 + 2] = positionArray[vi * 3 + 2];
+    }
+
+    wireGeometry.attributes.position.needsUpdate = true;
+    wireGeometry.computeBoundingSphere();
+  }
 
   function animate() {
     requestAnimationFrame(animate);
@@ -470,9 +422,26 @@
     // Smooth mouse movement.
     mouse.lerp(targetMouse, 0.055);
 
+    // ----------------------------------------------------------
+    // Slow continuous tumble, plus a mouse-driven tilt.
+    // ----------------------------------------------------------
+
+    surface.rotation.y = elapsed * 0.09 + mouse.x * 0.35;
+
+    surface.rotation.z =
+      Math.sin(elapsed * 0.11) * 0.06;
+
+    surface.rotation.x =
+      0.32 +
+      Math.cos(elapsed * 0.13) * 0.04 +
+      mouse.y * 0.2;
+
+    surface.updateMatrixWorld(true);
+    wireframe.rotation.copy(surface.rotation);
+
     updateDropInjection(delta);
     stepFluid();
-    updateGeometry(elapsed);
+    computeVertices(elapsed);
 
     // ----------------------------------------------------------
     // Ripple glow: brighten the mesh while ripples are active.
@@ -486,52 +455,20 @@
     tmpColor.copy(baseColor).lerp(glowColor, glow);
     wireMaterial.color.copy(tmpColor);
 
-    material.opacity = 0.045 + glow * 0.05;
-
-    // ----------------------------------------------------------
-    // Continuous slow rotation
-    // ----------------------------------------------------------
-
-    surface.rotation.y =
-      Math.sin(elapsed * 0.16) * 0.22;
-
-    surface.rotation.z =
-      Math.sin(elapsed * 0.11) * 0.035;
-
-    surface.rotation.x =
-      -0.22 +
-      Math.cos(elapsed * 0.13) * 0.025;
-
-    // Same orientation for wireframe.
-    wireframe.rotation.copy(surface.rotation);
-
-    // ----------------------------------------------------------
-    // Mouse-controlled orientation
-    // ----------------------------------------------------------
-
-    surface.rotation.y += mouse.x * 0.10;
-    surface.rotation.x += mouse.y * 0.055;
-
-    wireframe.rotation.copy(surface.rotation);
+    material.opacity = 0.05 + glow * 0.05;
 
     renderer.render(scene, camera);
   }
 
   // ------------------------------------------------------------
-  // Sizing: keep the manifold spanning the full viewport
+  // Sizing
   // ------------------------------------------------------------
 
-  function applyFillSize() {
-    const size = computeFillSize();
-
-    WIDTH = size.width;
-    HEIGHT = size.height;
-
-    rebuildSurfaceGeometry(WIDTH, HEIGHT);
-    rebuildFluidGrid(WIDTH, HEIGHT);
+  function applySize() {
+    SCALE = computeScale();
   }
 
-  applyFillSize();
+  applySize();
   animate();
 
   // ------------------------------------------------------------
@@ -539,17 +476,12 @@
   // ------------------------------------------------------------
 
   window.addEventListener("resize", () => {
-    camera.aspect =
-      window.innerWidth / window.innerHeight;
-
+    camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
 
-    renderer.setSize(
-      window.innerWidth,
-      window.innerHeight
-    );
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
-    applyFillSize();
+    applySize();
   });
 
 })();
